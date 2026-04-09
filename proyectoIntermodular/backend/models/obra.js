@@ -1,4 +1,5 @@
 const { Sequelize } = require("sequelize")
+const puntua = require("./puntua")
 
 module.exports=function(sequelize,DataTypes){
 
@@ -18,16 +19,15 @@ module.exports=function(sequelize,DataTypes){
             allowNull:false,
         },
         titulo:{
-            type: DataTypes.STRING(45),
+            type: DataTypes.STRING(200),
             allowNull:false,
-            unique:true
         },
         sinopsis:{
-            type: DataTypes.STRING(200),
+            type: DataTypes.STRING(2000),
             allowNull:true,
         },
         genero:{
-            type: DataTypes.STRING(45),
+            type: DataTypes.STRING(100),
             allowNull:false,
         },
         fechalanzamiento:{
@@ -38,13 +38,13 @@ module.exports=function(sequelize,DataTypes){
 
         estudio:{
 
-            type: DataTypes.STRING(50),
-            allowNull:false,
+            type: DataTypes.STRING(200),
+            allowNull:true,
         },
         autor:{
 
-            type: DataTypes.STRING(45),
-            allowNull:false,
+            type: DataTypes.STRING(200),
+            allowNull:true,
         },
         portada:{
             type: DataTypes.BLOB('long'),
@@ -52,8 +52,26 @@ module.exports=function(sequelize,DataTypes){
         },
         estado:{
 
-            type: DataTypes.ENUM('cancelado', 'finalizado', 'en emision', 'proximamente'),
+            type: DataTypes.ENUM('cancelado', 'finalizado', 'en emision', 'proximamente', 'pausado'),
             allowNull:false,
+        },
+        idApi:{
+
+            type: DataTypes.INTEGER,
+            allowNull:true,
+            unique:true
+        },
+        puntuacion:{
+            type: DataTypes.FLOAT,
+            allowNull:true,
+        },
+        popularidad:{
+            type: DataTypes.INTEGER,
+            allowNull:true,
+        },
+        trailer:{
+            type: DataTypes.STRING(300),
+            allowNull: true
         }
 
     },

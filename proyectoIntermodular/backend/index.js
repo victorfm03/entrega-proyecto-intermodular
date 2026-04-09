@@ -13,7 +13,6 @@ const listaObraRoutes=require("./routes/listaObraRoutes");
 
 const puntuaRoutes=require("./routes/puntuaRoutes");
 
-//const path=require("path");
 
 const cors=require("cors");
 

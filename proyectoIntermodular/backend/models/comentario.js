@@ -42,6 +42,11 @@ module.exports=function(sequelize,DataTypes){
         texto:{
             type: DataTypes.STRING(350),
             allowNull: false
+        },
+        likes:{
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: 0
         }
     },{
         tableName: "comentario",

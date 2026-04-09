@@ -9,20 +9,25 @@ const sequelize=require("../config/squelize.js");
 const models=initModels(sequelize);
 
 const Comentario= models.comentario;
+const likesComentario= models.likesComentario;
 
 class comentarioController{
     async createComentario(req, res){
 
-        const comentario= req.body;
+        const { idobra, texto, idrespuesta, idusuario } = req.body;
 
         try {
+            const newComentario = await Comentario.create({
+                idobra,
+                texto,
+                idrespuesta: idrespuesta || null,
+                idusuario,
+            });
+            res.status(201).json(Respuesta.exito(newComentario, "comentario insertado"));
 
-            const newComentario= await Comentario.create(comentario);
-            res.status(201).json(Respuesta.exito(newComentario,"comentario insertado"))
-
-        }catch (err){
-            logMensaje("Error :"+err);
-            res.status(500).json(Respuesta.error(null,"Error al crear el comentario"))
+        } catch (err) {
+            logMensaje("Error :" + err);
+            res.status(500).json(Respuesta.error(null, "Error al crear el comentario"));
         }
 
     }
@@ -55,6 +60,46 @@ class comentarioController{
             res.json(Respuesta.exito(data,"Se recuperaron todos los comentarios"));
 
         }catch (err){
+            logMensaje("Error: "+err)
+            res.status(500).json(Respuesta.error(null, "No se pudieron recuperar los comentarios"))
+        }
+
+    }
+
+
+    async getComentariosByObraID(req, res){
+
+        const id_obra=req.params.idobra;
+
+        try {
+
+            const comentarios= await Comentario.findAll({
+                where: {idobra: id_obra}
+            });
+
+            // Obtener likes para cada comentario usando la lógica de getLikes
+            const comentariosConLikes = await Promise.all(comentarios.map(async (comentario) => {
+                const likesData = await likesComentario.findAll({
+                    where: { idComentario: comentario.idcomentario, leDioLike: true },
+                    attributes: [[sequelize.literal('COUNT(*)'), 'totalLikes']],
+                    raw: true
+                });
+
+                const votoUsuario = await likesComentario.findOne({
+                    where: { idComentario: comentario.idcomentario, idUsuario: 1 },
+                    attributes: ['leDioLike'],
+                    raw: true
+                });
+                
+                return {
+                    ...comentario.toJSON(),
+                    totalLikes: likesData?.[0]?.totalLikes || 0,
+                    currentUserVote: votoUsuario ? Boolean(votoUsuario.leDioLike) : null
+                };
+            }));
+
+            res.json(Respuesta.exito(comentariosConLikes,"Se recuperaron los comentarios de la obra con likes"));
+        } catch (err) {
             logMensaje("Error: "+err)
             res.status(500).json(Respuesta.error(null, "No se pudieron recuperar los comentarios"))
         }

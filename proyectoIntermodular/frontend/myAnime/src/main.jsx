@@ -3,43 +3,30 @@ import { createRoot } from 'react-dom/client';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
 import { createBrowserRouter, RouterProvider } from "react-router";
-import Home from './pages/home.jsx';
-//import Product from './pages/product.jsx';
+import Home from './pages/Home.jsx';
+import Animes from './pages/Animes.jsx';
 import "./globalStyle.css";
 import { ThemeProviderWrapper } from "./ThemeProvider.jsx";
-/*import Category from './pages/category.jsx';
-import ProductList from './pages/ProductList.jsx';
-import ProductModify from './pages/ProductModify.jsx';
-import CategoryList from './pages/CategoryList.jsx';
-import CategoryModify from './pages/CategoryModify.jsx';*/
+import Mangas from './pages/Mangas.jsx';
+import DetalleObra from './pages/DetalleObra.jsx';
+import Register from './pages/Registro.jsx';
+import Login from './pages/Logind.jsx';
+import Perfil from './pages/Perfil.jsx';
 
 let router = createBrowserRouter([
   {
     path: "/",
-    element: <Home/>,
+    element: <Home />,
     children: [
-      /*{
-        path:"añadirProducto",
-        element: <Product />
-      },{
-        path: "añadirCategoria",
-        element: <Category />
-      },{
-        path:"productList",
-        element: <ProductList />
-      },{
-        path:"modificarProducto/:id_product",
-        element: <ProductModify />
-      },{
-        path:"CategoryList",
-        element: <CategoryList />
-      },{
-        path:"modificarCategoria/:id_category",
-        element: <CategoryModify />
-      }*/
+      { path: "animes", element: <Animes /> },
+      { path: "mangas", element: <Mangas /> },
+      { path: "register", element: <Register /> },
+      {path: "login", element: <Login />},
+      {path: "perfil", element: <Perfil />},
+      { path: "/obra/:idobra", element: <DetalleObra /> } // <-- nueva ruta
     ]
   }
-])
+]);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
