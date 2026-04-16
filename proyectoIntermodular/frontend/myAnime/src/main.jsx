@@ -12,6 +12,7 @@ import DetalleObra from './pages/DetalleObra.jsx';
 import Register from './pages/Registro.jsx';
 import Login from './pages/Logind.jsx';
 import Perfil from './pages/Perfil.jsx';
+import { FavoritesProvider} from './components/FavoritesContext.jsx';
 
 let router = createBrowserRouter([
   {

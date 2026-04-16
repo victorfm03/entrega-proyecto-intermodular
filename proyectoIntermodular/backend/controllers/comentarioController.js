@@ -23,6 +23,10 @@ class comentarioController{
                 idrespuesta: idrespuesta || null,
                 idusuario,
             });
+
+            const usuario= await models.usuario.findByPk(idusuario);
+
+            newComentario.dataValues.nombre = usuario.nombre;
             res.status(201).json(Respuesta.exito(newComentario, "comentario insertado"));
 
         } catch (err) {
@@ -74,7 +78,13 @@ class comentarioController{
         try {
 
             const comentarios= await Comentario.findAll({
-                where: {idobra: id_obra}
+                where: {idobra: id_obra},
+                include: [
+                    {
+                        model: models.usuario,
+                        as: "idusuario_usuario",
+                        attributes: ['nombre']
+                    }]
             });
 
             // Obtener likes para cada comentario usando la lógica de getLikes

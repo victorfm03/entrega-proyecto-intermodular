@@ -10,6 +10,8 @@ const models=initModels(sequelize);
 
 const Usuario= models.usuario;
 
+const Lista= models.lista;
+
 class UsuarioController{
     async createUsuario(req, res){
 
@@ -18,6 +20,16 @@ class UsuarioController{
         try {
 
             const newUser= await Usuario.create(usuario);
+            await Lista.findOrCreate({
+    where: {
+        idusuario: newUser.idUsuario,
+        nombrelista: "Favoritos"
+    },
+    defaults: {
+        idusuario: newUser.idUsuario,
+        nombrelista: "Favoritos"
+    }
+});
             res.status(201).json(Respuesta.exito(newUser,"Usuario insertado"))
 
         }catch (err){
@@ -86,6 +98,32 @@ class UsuarioController{
         }
 
     }
+
+                async getUsuarioPerfil(req, res){
+        
+                const id_usuario=req.params.idUsuario;
+        
+                try {
+        
+                    const data= await Usuario.findByPk(id_usuario);
+                    if(!data){
+                        res.status(404).json(Respuesta.error(null, "Usuario inexistente"));
+                    }else{
+                    const base64 = data.img_perfil.toString();
+                    const tipo = base64.split(';')[0].split(':')[1];
+                    const image = base64.replace(/^data:image\/\w+;base64,/, "");
+                    const imgBuffer = Buffer.from(image, 'base64');
+    
+                    res.set('Content-Type', tipo);
+                    res.send(imgBuffer);
+                }
+        
+                }catch (err){
+                    logMensaje("Error: "+err)
+                    res.status(500).json(Respuesta.error(null, "No se pudo recuperar el Perfil del usuario"))
+                }
+        
+            }
 
     async deleteUsuario(req, res){
 

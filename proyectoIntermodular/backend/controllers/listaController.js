@@ -61,6 +61,35 @@ class listaController{
 
     }
 
+    async getFavoritosUsuario(req, res) {
+    const idUsuario = req.params.idusuario;
+
+    try {
+        const favoritos = await Lista.findOne({
+            where: {
+                idusuario: idUsuario,
+                nombrelista: "Favoritos"
+            }
+        });
+
+        if (!favoritos) {
+            return res.status(404).json(
+                Respuesta.error(null, "Lista de favoritos no encontrada")
+            );
+        }
+
+        res.json(
+            Respuesta.exito(favoritos, "Lista de favoritos recuperada")
+        );
+
+    } catch (err) {
+        logMensaje("Error: " + err);
+        res.status(500).json(
+            Respuesta.error(null, "Error al recuperar favoritos")
+        );
+    }
+}
+
     async deleteLista(req, res){
 
         const id_lista=req.params.idlista;
