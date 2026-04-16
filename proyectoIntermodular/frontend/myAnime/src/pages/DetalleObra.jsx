@@ -58,10 +58,36 @@ function DetalleObra() {
   const usuarioLogueado = !!localStorage.getItem("idUsuario");
 
   const comentariosRaiz = comentarios.filter((item) => !item.parentId);
-  
+  const idUsuario = localStorage.getItem("idUsuario");
 
-  
-  
+  const [imgUrl, setImgUrl] = useState(null);
+
+  useEffect(() => {
+    setImgUrl(idUsuario ? `${apiUrl}/usuario/perfil/${idUsuario}` : null);
+  }, [idUsuario, apiUrl]);
+
+  useEffect(() => {
+    const comprobarImagen = async () => {
+      try {
+        const res = await fetch(imgUrl);
+
+        if (!res.ok) {
+          setImgUrl(null);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          setImgUrl(null);
+        }
+      } catch (error) {}
+    };
+
+    if (imgUrl) {
+      comprobarImagen();
+    }
+  }, [imgUrl]);
 
   const ordenarComentarios = (lista, ordenamiento) => {
     const copia = [...lista];
@@ -107,126 +133,119 @@ function DetalleObra() {
   useEffect(() => {
     if (!idobra) return;
     const fetchComentarios = async () => {
-    fetch(`${apiUrl}/comentario/obra/${idobra}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        const baseComentarios = data.datos || data;
-        const inicialLikes = {};
-        const inicialUserVotes = {};
+      fetch(`${apiUrl}/comentario/obra/${idobra}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+          return res.json();
+        })
+        .then(async (data) => {
+          const baseComentarios = data.datos || data;
+          const inicialLikes = {};
+          const inicialUserVotes = {};
 
-        const comentariosTransformados = Array.isArray(baseComentarios)
-          ? baseComentarios.map(async(c) => {
-              inicialLikes[c.idcomentario] = c.totalLikes || 0;
-              if (
-                c.currentUserVote !== undefined &&
-                c.currentUserVote !== null
-              ) {
-                inicialUserVotes[c.idcomentario] = Boolean(c.currentUserVote);
-              }
+          const comentariosTransformados = Array.isArray(baseComentarios)
+            ? await Promise.all(
+                baseComentarios.map(async (c) => {
+                  inicialLikes[c.idcomentario] = c.totalLikes || 0;
+                  if (
+                    c.currentUserVote !== undefined &&
+                    c.currentUserVote !== null
+                  ) {
+                    inicialUserVotes[c.idcomentario] = Boolean(
+                      c.currentUserVote,
+                    );
+                  }
 
-              try {
-                var url_img=`${apiUrl}/usuario/perfil/${c.idusuario}`;
-          const res = await fetch(url_img);
-  
-          if (!res.ok) {
-            url_img = null;
-            return;
-          }
-  
-          const data = await res.json();
-  
-          if (!data.ok) {
-            url_img = null;
-          }
-        } catch (error) {
-          
-        }
+                  try {
+                    var url_img = `${apiUrl}/usuario/perfil/${c.idusuario}`;
+                    const res = await fetch(url_img);
 
-              return {
-                id: c.idcomentario,
-                usuario: c.idusuario_usuario.nombre || "Usuario",
-                fecha: c.fechapublicacion || "",
-                texto: c.texto,
-                url_img: url_img,
-                parentId: c.idrespuesta || null,
-                idobra: c.idobra,
-              };
-            })
-          : [];
+                    if (!res.ok) {
+                      url_img = null;
+                      return;
+                    }
 
-        setComentarios(comentariosTransformados);
-        setLikes(inicialLikes);
-        setUserVotes(inicialUserVotes);
-      })
-      .catch(() => setComentarios([]));
+                    const data = await res.json();
+
+                    if (!data.ok) {
+                      url_img = null;
+                    }
+                  } catch (error) {}
+
+                  console.log(c.idusuario_usuario.nombre);
+                  return {
+                    id: c.idcomentario,
+                    usuario: c.idusuario_usuario.nombre || "Usuario",
+                    fecha: c.fechapublicacion || "",
+                    texto: c.texto,
+                    url_img: url_img,
+                    parentId: c.idrespuesta || null,
+                    idobra: c.idobra,
+                  };
+                }),
+              )
+            : [];
+
+          setComentarios(comentariosTransformados);
+          setLikes(inicialLikes);
+          setUserVotes(inicialUserVotes);
+        })
+        .catch(() => setComentarios([]));
     };
 
     fetchComentarios();
   }, [idobra]);
 
   const toggleFavorito = async () => {
-  if (!lista) return;
+    if (!lista) return;
 
-  try {
-    if (esFavorito) {
-      await fetch(
-        `${apiUrl}/listaobra/${lista.idlista}/${obra.idobra}`,
-        { method: "DELETE" }
-      );
+    try {
+      if (esFavorito) {
+        await fetch(`${apiUrl}/listaobra/${lista.idlista}/${obra.idobra}`, {
+          method: "DELETE",
+        });
 
-      setEsFavorito(false);
+        setEsFavorito(false);
+      } else {
+        await fetch(`${apiUrl}/listaobra`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            idlista: lista.idlista,
+            idobra: obra.idobra,
+          }),
+        });
 
-    } else {
-      await fetch(`${apiUrl}/listaobra`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          idlista: lista.idlista,
-          idobra: obra.idobra
-        })
-      });
-
-      setEsFavorito(true);
+        setEsFavorito(true);
+      }
+    } catch (err) {
+      console.error(err);
     }
+  };
 
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-  useEffect(() => {
-  const idUsuario = localStorage.getItem("idUsuario");
-
-  if (!idUsuario) return;
-
-  fetch(`${apiUrl}/lista/favoritos/${idUsuario}`)
-    .then(res => res.json())
-    .then(data => {
-      const favoritos = data.datos;
-
-      setLista(favoritos);
-    })
-    .catch(err => console.error(err));
-}, []);
 
 useEffect(() => {
-  if (!lista || !idobra) return;
+  const idUsuario = localStorage.getItem("idUsuario");
 
-  fetch(`${apiUrl}/listaobra/${lista.idlista}`)
+  if (!idUsuario || !obra) return;
+
+  fetch(`${apiUrl}/listaobra/favoritos/${idUsuario}`)
     .then(res => res.json())
     .then(data => {
-      const obras = data.datos || [];
+      const favoritas = data.datos || [];
 
-      setEsFavorito(
-        obras.some(item => item.idobra == idobra)
+      const yaEsFavorito = favoritas.obras.some(
+        fav => fav.idobra === obra.idobra
       );
-    });
-}, [lista, idobra]);
+
+      setEsFavorito(yaEsFavorito);
+    })
+    .catch(console.error);
+}, [obra]);
+
+
 
   const enviarComentario = () => {
     if (!nuevoComentario.trim() || !obra) return;
@@ -429,7 +448,10 @@ useEffect(() => {
       </div>
 
       <div>
-        <button className={`favorite-btn ${esFavorito ? "active" : ""}`} onClick={toggleFavorito}>
+        <button
+          className={`favorite-btn ${esFavorito ? "active" : ""}`}
+          onClick={toggleFavorito}
+        >
           <FaHeart />
         </button>
       </div>
@@ -497,15 +519,30 @@ useEffect(() => {
 
         {/* EDITOR PRINCIPAL */}
         <div className="comentario-editor">
-          <img
-            className="comentario-avatar"
-            src={
-              localStorage.getItem("idUsuario")
-                ? `${apiUrl}/usuario/perfil/${localStorage.getItem("idUsuario")}`
-                : "https://i.pravatar.cc/50"
-            }
-            alt="Avatar"
-          />
+          {imgUrl ? (
+            <img
+              className="comentario-avatar"
+              src={`${apiUrl}/usuario/perfil/${localStorage.getItem("idUsuario")}`}
+              alt="Avatar"
+            />
+          ) : (
+            <div
+              className="comentario-avatar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#d9d9d9",
+              }}
+            >
+              <MDBIcon
+                fas
+                icon="user"
+                style={{ color: "#fff", fontSize: "20px" }}
+              />
+            </div>
+          )}
+
           <div
             className="comentario-input-wrap"
             onMouseDown={() => {
@@ -567,22 +604,33 @@ useEffect(() => {
               <div className="comentario-card-wrapper" key={item.id}>
                 <div className="comentario-card">
                   <div className="comentario-meta">
-                    {item.url_img ? (<img
-                      className="comentario-avatar"
-                      src={item.url_img}
-                      alt="Avatar"
-                    />
-                    ):(
+                    {item.url_img ? (
+                      <img
+                        className="comentario-avatar"
+                        src={item.url_img}
+                        alt="Avatar"
+                      />
+                    ) : (
                       <div
-                  className="comentario-meta">
-                  <MDBIcon
-                    fas
-                    icon="user"
-                    style={{ color: "#fff", fontSize: "20px" }}
-                  />
-                </div>
+                        className="comentario-div-icono"
+                        style={{
+                          width: "55px",
+                          height: "55px",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "#999",
+                          borderRadius: "50%",
+                          display: "flex",
+                        }}
+                      >
+                        <MDBIcon
+                          fas
+                          icon="user"
+                          style={{ color: "#fff", fontSize: "20px" }}
+                        />
+                      </div>
                     )}
-                    
+
                     <span className="comentario-user">{item.usuario}</span>
                     <span className="comentario-fecha">
                       {formatearTiempo(item.fecha)}

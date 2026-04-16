@@ -250,6 +250,13 @@
 }
 
 
+/*.comentario-div-icono i{
+        background-color: grey;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+}*/
+
 
 .comentario-user { font-weight: 700; margin-right: 8px; }
 .comentario-fecha { color: #606060; }

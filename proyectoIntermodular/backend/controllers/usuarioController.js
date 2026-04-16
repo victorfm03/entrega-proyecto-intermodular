@@ -21,15 +21,15 @@ class UsuarioController{
 
             const newUser= await Usuario.create(usuario);
             await Lista.findOrCreate({
-    where: {
-        idusuario: newUser.idUsuario,
-        nombrelista: "Favoritos"
-    },
-    defaults: {
-        idusuario: newUser.idUsuario,
-        nombrelista: "Favoritos"
-    }
-});
+                where: {
+                    idusuario: newUser.idUsuario,
+                    nombrelista: "Favoritos"
+                },
+                defaults: {
+                    idusuario: newUser.idUsuario,
+                    nombrelista: "Favoritos"
+                }
+            });
             res.status(201).json(Respuesta.exito(newUser,"Usuario insertado"))
 
         }catch (err){

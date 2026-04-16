@@ -72,7 +72,7 @@ function Perfil() {
     const cargarFavoritos = async () => {
       try {
         // 1. obtener lista Favoritos del usuario
-        const resLista = await fetch(`${apiUrl}/lista/favoritos/${idUsuario}`);
+        const resLista = await fetch(`${apiUrl}/favoritos/${idUsuario}`);
         const dataLista = await resLista.json();
 
         if (!dataLista.ok) return;
@@ -81,7 +81,7 @@ function Perfil() {
 
         // 2. obtener obras de esa lista
         const resObras = await fetch(
-          `${apiUrl}/listaobra/${lista.idlista}/obras`,
+          `${apiUrl}/listaobra/favoritos${lista.idlista}/obras`,
         );
 
         const dataObras = await resObras.json();

@@ -27,6 +27,81 @@ class listaObraController{
 
     }
 
+    async addFavorito(req, res) {
+
+        const { idusuario, idobra } = req.body;
+
+        try {
+
+            const listaFavoritos= await models.lista.findAll({
+                where: {nombrelista: "Favoritos", idusuario},
+            });
+
+            const data={idlista: listaFavoritos[0].idlista, idobra};
+
+            const newListaObra= await ListaObra.create(data);
+            res.status(201).json(Respuesta.exito(newListaObra,"listaObra insertada"))
+        }catch (err) {
+                    logMensaje("Error: "+err)
+                    res.status(500).json(Respuesta.error(null, "No se pudo agregar a favoritos"))
+                }
+    }
+
+        async removeFavorito(req, res) {
+
+        const idusuario=req.params.idusuario;
+        const idobra=req.params.idobra;
+
+        try {
+
+            const listaFavoritos= await models.lista.findAll({
+                where: {nombrelista: "Favoritos", idusuario},
+            });
+
+            const numFilas= await ListaObra.destroy({
+                where: {
+                    idlista: listaFavoritos[0].idlista,
+                    idobra: idobra
+                }
+            });
+
+            if (numFilas== 0){
+
+                res.status(404).json(Respuesta.error(null,"No se encontro la listaObra del id: "+id_lista+" y id: "+id_obra));
+            }else{
+
+                res.status(204).send();
+            }
+
+        }catch (err) {
+                    logMensaje("Error: "+err)
+                    res.status(500).json(Respuesta.error(null, "No se pudo agregar a favoritos"))
+                }
+    }
+
+    async getAllFavoritos(req, res) {
+        const idusuario=req.params.idusuario;
+
+        try {
+            const favoritos= await models.obra.findAll({
+                include: [{
+                    model: models.listaobra,
+                    required: true,
+                    include: [{
+                        model: models.lista,
+                        where: { idusuario: idusuario, nombrelista: "Favoritos" },
+                    }]
+
+                }]
+            });
+            res.json(Respuesta.exito(favoritos,"Se recuperaron los favoritos del usuario"));
+        }catch (err) {
+                    logMensaje("Error: "+err)
+                    res.status(500).json(Respuesta.error(null, "No se pudo recuperar los favoritos"))
+                }
+        
+    }
+
     async getListaObraByIdLista(req, res){
     
             const id_lista=req.params.idlista;
