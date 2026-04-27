@@ -28,24 +28,31 @@ class listaObraController{
     }
 
     async addFavorito(req, res) {
+    const { idlista, idobra } = req.body;
 
-        const { idusuario, idobra } = req.body;
+    try {
 
-        try {
+        if (!idlista || !idobra) {
+            return res.status(400).json(
+                Respuesta.error(null, "Faltan datos (idlista o idobra)")
+            );
+        }
 
-            const listaFavoritos= await models.lista.findAll({
-                where: {nombrelista: "Favoritos", idusuario},
-            });
+        const data = { idlista, idobra };
 
-            const data={idlista: listaFavoritos[0].idlista, idobra};
+        const newListaObra = await ListaObra.create(data);
 
-            const newListaObra= await ListaObra.create(data);
-            res.status(201).json(Respuesta.exito(newListaObra,"listaObra insertada"))
-        }catch (err) {
-                    logMensaje("Error: "+err)
-                    res.status(500).json(Respuesta.error(null, "No se pudo agregar a favoritos"))
-                }
+        res.status(201).json(
+            Respuesta.exito(newListaObra, "Favorito añadido")
+        );
+
+    } catch (err) {
+        logMensaje("Error: " + err);
+        res.status(500).json(
+            Respuesta.error(null, "No se pudo agregar a favoritos")
+        );
     }
+}
 
         async removeFavorito(req, res) {
 
@@ -79,28 +86,28 @@ class listaObraController{
                 }
     }
 
-    async getAllFavoritos(req, res) {
-        const idusuario=req.params.idusuario;
-
-        try {
-            const favoritos= await models.obra.findAll({
+ // backend/controllers/listaObraController.js
+async getAllFavoritos(req, res) {
+    const idusuario = req.params.idusuario;
+    try {
+        const favoritos = await models.obra.findAll({
+            include: [{
+                model: models.listaobra,
+                as: 'listaobras', // OBLIGATORIO: Debe coincidir con init-models.js
+                required: true,
                 include: [{
-                    model: models.listaobra,
-                    required: true,
-                    include: [{
-                        model: models.lista,
-                        where: { idusuario: idusuario, nombrelista: "Favoritos" },
-                    }]
-
+                    model: models.lista,
+                    as: 'idlista_lista', // OBLIGATORIO: Debe coincidir con init-models.js
+                    where: { idusuario: idusuario, nombrelista: "Favoritos" },
                 }]
-            });
-            res.json(Respuesta.exito(favoritos,"Se recuperaron los favoritos del usuario"));
-        }catch (err) {
-                    logMensaje("Error: "+err)
-                    res.status(500).json(Respuesta.error(null, "No se pudo recuperar los favoritos"))
-                }
-        
+            }]
+        });
+        res.json(Respuesta.exito(favoritos, "Se recuperaron los favoritos"));
+    } catch (err) {
+        logMensaje("Error: " + err);
+        res.status(500).json(Respuesta.error(null, "No se pudo recuperar los favoritos"));
     }
+}
 
     async getListaObraByIdLista(req, res){
     

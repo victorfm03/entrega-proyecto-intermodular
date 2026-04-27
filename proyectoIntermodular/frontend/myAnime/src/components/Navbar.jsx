@@ -7,6 +7,7 @@ import {
   MDBIcon,
   MDBInput,
 } from "mdb-react-ui-kit";
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 import { ThemeContext } from "../ThemeProvider";
 import { useContext, useState, useEffect, useRef } from "react";
@@ -44,7 +45,9 @@ function Navbar() {
     setIsLoggedIn(false);
     setProfileMenuOpen(false);
     localStorage.removeItem("idUsuario");
+    localStorage.removeItem("admin");
     navigate("/");
+    
   };
 
   // Mantener activeTab sincronizado con la URL
@@ -194,6 +197,52 @@ function Navbar() {
         >
           <MDBIcon fas icon="user" className="me-2" /> Mi Perfil
         </Link>
+{localStorage.getItem("admin") ?(
+        <Link
+          to="/admin"
+          className="profile-menu-item"
+          onClick={() => setProfileMenuOpen(false)}
+          style={{
+            display: "block",
+            padding: "12px 16px",
+            color: darkMode ? "#fff" : "#000",
+            textDecoration: "none",
+            borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
+            transition: "background-color 0.2s",
+          }}
+          onMouseEnter={(e) =>
+            (e.target.style.backgroundColor = darkMode ? "#3a3a3a" : "#f5f5f5")
+          }
+          onMouseLeave={(e) =>
+            (e.target.style.backgroundColor = "transparent")
+          }
+        >
+          <MDBIcon fas icon="key" className="me-2" /> Administración
+        </Link>
+    ):null}
+
+        <Link
+          to="/quiz"
+          className="profile-menu-item"
+          onClick={() => setProfileMenuOpen(false)}
+          style={{
+            display: "block",
+            padding: "12px 16px",
+            color: darkMode ? "#fff" : "#000",
+            textDecoration: "none",
+            borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
+            transition: "background-color 0.2s",
+          }}
+          onMouseEnter={(e) =>
+            (e.target.style.backgroundColor = darkMode ? "#3a3a3a" : "#f5f5f5")
+          }
+          onMouseLeave={(e) =>
+            (e.target.style.backgroundColor = "transparent")
+          }
+        >
+          <SportsEsportsIcon className="me-2" style={{ fontSize: "20px", verticalAlign: "middle" }} /> Quiz
+        </Link>
+
         <button
           className="profile-menu-item"
           onClick={handleLogout}
@@ -288,6 +337,7 @@ function Navbar() {
                 </NavLink>
               </>
             )}
+            
           </div>
         </MDBNavbarNav>
       </MDBContainer>

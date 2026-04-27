@@ -6,8 +6,9 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import { apiUrl } from "../config.js";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaCheck } from "react-icons/fa";
 import { MDBIcon } from "mdb-react-ui-kit";
+import { useFavorites } from "../components/FavoritesContext";
 
 const formatearTiempo = (fecha) => {
   if (!fecha || fecha === "Ahora") return "hace un momento";
@@ -50,10 +51,11 @@ function DetalleObra() {
   const [showMainActions, setShowMainActions] = useState(false);
   const replyTextareaRef = useRef(null);
   const isPointerDownInsideEditor = useRef(false);
+  const { triggerRefresh } = useFavorites();
 
   const [esFavorito, setEsFavorito] = useState(false);
   const [lista, setLista] = useState(null);
-  const [cargandoFavorito, setCargandoFavorito] = useState(false);
+
 
   const usuarioLogueado = !!localStorage.getItem("idUsuario");
 
@@ -61,32 +63,35 @@ function DetalleObra() {
   const idUsuario = localStorage.getItem("idUsuario");
 
   const [imgUrl, setImgUrl] = useState(null);
+  const [displayImgUrl, setDisplayImgUrl] = useState(null);
 
   useEffect(() => {
-    setImgUrl(idUsuario ? `${apiUrl}/usuario/perfil/${idUsuario}` : null);
+    const url = idUsuario ? `${apiUrl}/usuario/perfil/${idUsuario}` : null;
+    setImgUrl(url);
+    setDisplayImgUrl(url);
   }, [idUsuario, apiUrl]);
 
   useEffect(() => {
     const comprobarImagen = async () => {
+      if (!imgUrl || imgUrl.startsWith("blob:")) return;
+
       try {
         const res = await fetch(imgUrl);
 
         if (!res.ok) {
-          setImgUrl(null);
+          setDisplayImgUrl(null);
           return;
         }
 
-        const data = await res.json();
-
-        if (!data.ok) {
-          setImgUrl(null);
-        }
-      } catch (error) {}
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        setDisplayImgUrl(url);
+      } catch (error) {
+        console.error("Error al comprobar imagen:", error);
+      }
     };
 
-    if (imgUrl) {
-      comprobarImagen();
-    }
+    comprobarImagen();
   }, [imgUrl]);
 
   const ordenarComentarios = (lista, ordenamiento) => {
@@ -162,7 +167,15 @@ function DetalleObra() {
 
                     if (!res.ok) {
                       url_img = null;
-                      return;
+                      return {
+                        id: c.idcomentario,
+                        usuario: c.idusuario_usuario?.nombre || "Usuario",
+                        fecha: c.fechapublicacion || "",
+                        texto: c.texto,
+                        url_img: url_img,
+                        parentId: c.idrespuesta ?? null,
+                        idobra: c.idobra,
+                      };
                     }
 
                     const data = await res.json();
@@ -206,6 +219,7 @@ function DetalleObra() {
         });
 
         setEsFavorito(false);
+        triggerRefresh();
       } else {
         await fetch(`${apiUrl}/listaobra`, {
           method: "POST",
@@ -219,33 +233,56 @@ function DetalleObra() {
         });
 
         setEsFavorito(true);
+        triggerRefresh();
       }
+
+
     } catch (err) {
       console.error(err);
     }
   };
 
+  useEffect(() => {
+    const cargarLista = async () => {
+      try {
+        const idUsuario = localStorage.getItem("idUsuario");
+        if (!idUsuario) return;
 
-useEffect(() => {
-  const idUsuario = localStorage.getItem("idUsuario");
+        // Cambiado a /lista/favoritos para obtener el ID de la lista
+        const res = await fetch(`${apiUrl}/lista/favoritos/${idUsuario}`);
+        const data = await res.json();
 
-  if (!idUsuario || !obra) return;
+        if (data && data.datos) {
+          setLista(data.datos);
+        }
+      } catch (err) {
+        console.error("Error cargando lista:", err);
+      }
+    };
 
-  fetch(`${apiUrl}/listaobra/favoritos/${idUsuario}`)
-    .then(res => res.json())
-    .then(data => {
-      const favoritas = data.datos || [];
+    cargarLista();
+  }, []);
 
-      const yaEsFavorito = favoritas.obras.some(
-        fav => fav.idobra === obra.idobra
-      );
+  useEffect(() => {
+    const idUsuario = localStorage.getItem("idUsuario");
 
-      setEsFavorito(yaEsFavorito);
-    })
-    .catch(console.error);
-}, [obra]);
+    if (!idUsuario || !obra) return;
 
+    fetch(`${apiUrl}/listaobra/favoritos/${idUsuario}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const favoritas = data.datos || [];
 
+        const listaobras = Array.isArray(favoritas) ? favoritas : [];
+
+        const yaEsFavorito = listaobras.some(
+          (fav) => fav.idobra === obra.idobra,
+        );
+
+        setEsFavorito(yaEsFavorito);
+      })
+      .catch(console.error);
+  }, [obra]);
 
   const enviarComentario = () => {
     if (!nuevoComentario.trim() || !obra) return;
@@ -443,6 +480,15 @@ useEffect(() => {
             <strong>Tipo:</strong> {obra.tipo} | <strong>Género:</strong>{" "}
             {obra.genero}
           </p>
+          {obra.tipo === "anime" ? (
+            <p>
+              <strong>Estudio:</strong> {obra.estudio || "Desconocido"}
+            </p>
+          ) : (
+            <p>
+              <strong>Autor:</strong> {obra.autor || "Desconocido"}
+            </p>
+          )}
           <p className="detalle-sinopsis">{obra.sinopsis}</p>
         </div>
       </div>
@@ -452,7 +498,7 @@ useEffect(() => {
           className={`favorite-btn ${esFavorito ? "active" : ""}`}
           onClick={toggleFavorito}
         >
-          <FaHeart />
+          {esFavorito ? <FaCheck /> : <FaHeart />}
         </button>
       </div>
 
@@ -519,10 +565,10 @@ useEffect(() => {
 
         {/* EDITOR PRINCIPAL */}
         <div className="comentario-editor">
-          {imgUrl ? (
+          {displayImgUrl ? (
             <img
               className="comentario-avatar"
-              src={`${apiUrl}/usuario/perfil/${localStorage.getItem("idUsuario")}`}
+              src={displayImgUrl}
               alt="Avatar"
             />
           ) : (
@@ -687,11 +733,7 @@ useEffect(() => {
                   <div className="respuesta-editor indentado">
                     <img
                       className="comentario-avatar"
-                      src={
-                        localStorage.getItem("idUsuario")
-                          ? `${apiUrl}/usuario/perfil/${localStorage.getItem("idUsuario")}`
-                          : "https://i.pravatar.cc/50"
-                      }
+                      src={displayImgUrl || "https://i.pravatar.cc/50"}
                       alt="Avatar"
                     />
                     <div className="comentario-input-wrap">
@@ -733,7 +775,7 @@ useEffect(() => {
                         <div className="comentario-meta">
                           <img
                             className="comentario-avatar"
-                            src={item.url_img}
+                            src={resp.url_img}
                             alt="Avatar"
                           />
                           <span className="comentario-user">

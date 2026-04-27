@@ -409,6 +409,14 @@
   transition: all 0.2s ease;
 }
 
+.favorite-btn.active {
+  background: #4caf50; /* verde para el tick */
+}
+
+.favorite-btn.active:hover {
+  background: #45a049;
+}
+
 .favorite-btn svg {
   color: white;
   font-size: 18px;

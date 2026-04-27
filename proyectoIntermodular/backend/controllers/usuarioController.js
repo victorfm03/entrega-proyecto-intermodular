@@ -48,7 +48,8 @@ class UsuarioController{
             const user= await Usuario.findOne({
                 where: {
                     email: email,
-                    contraseña: contraseña
+                    contraseña: contraseña,
+                    bloqueado: false,
                 }
             });
 

@@ -13,6 +13,14 @@ import Register from './pages/Registro.jsx';
 import Login from './pages/Logind.jsx';
 import Perfil from './pages/Perfil.jsx';
 import { FavoritesProvider} from './components/FavoritesContext.jsx';
+import Admin from './pages/Admin.jsx';
+import RegisterAdmin from './pages/RegistroAdmin.jsx';
+import ListadoUsuarios from './pages/ListadoUsuarios.jsx';
+import ModificarUsuario from './pages/ModificarUsuario.jsx'
+import CrearObra from './pages/CrearObra.jsx';
+import ModificarObra from './pages/ModificarObra.jsx';
+import ListadoObras from './pages/ListadoObras.jsx';
+import Quiz from './pages/Quiz.jsx';
 
 let router = createBrowserRouter([
   {
@@ -24,6 +32,14 @@ let router = createBrowserRouter([
       { path: "register", element: <Register /> },
       {path: "login", element: <Login />},
       {path: "perfil", element: <Perfil />},
+      {path: "admin", element: <Admin />},
+      {path: "admin/registro", element: <RegisterAdmin />},
+      {path: "admin/usuarios", element: <ListadoUsuarios />},
+      {path: "admin/usuarios/modificar/:idUsuario", element: <ModificarUsuario />},
+      {path: "admin/obras", element: <ListadoObras />},
+      {path: "admin/obras/modificar/:idObra", element: <ModificarObra />},
+      {path: "admin/crear/:tipo", element: <CrearObra />},
+      {path: "quiz", element: <Quiz />},
       { path: "/obra/:idobra", element: <DetalleObra /> } // <-- nueva ruta
     ]
   }
@@ -31,8 +47,10 @@ let router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ThemeProviderWrapper>
+  <ThemeProviderWrapper>
+    <FavoritesProvider>
       <RouterProvider router={router} />
-    </ThemeProviderWrapper>
-  </StrictMode>
+    </FavoritesProvider>
+  </ThemeProviderWrapper>
+</StrictMode>
 );

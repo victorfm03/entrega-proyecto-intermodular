@@ -71,31 +71,41 @@ function Perfil() {
 
     const cargarFavoritos = async () => {
       try {
-        // 1. obtener lista Favoritos del usuario
-        const resLista = await fetch(`${apiUrl}/favoritos/${idUsuario}`);
-        const dataLista = await resLista.json();
+        const res = await fetch(`${apiUrl}/listaobra/favoritos/${idUsuario}`);
+        const data = await res.json();
 
-        if (!dataLista.ok) return;
-
-        const lista = dataLista.datos;
-
-        // 2. obtener obras de esa lista
-        const resObras = await fetch(
-          `${apiUrl}/listaobra/favoritos${lista.idlista}/obras`,
-        );
-
-        const dataObras = await resObras.json();
-
-        if (dataObras.ok) {
-          setFavoritos(dataObras.datos);
+        if (data.ok) {
+          setFavoritos(data.datos || []);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error al cargar favoritos:", err);
       }
     };
 
     cargarFavoritos();
-  }, []);
+  }, [apiUrl]);
+
+  useEffect(() => {
+    const cargarLista = async () => {
+      try {
+        const idUsuario = localStorage.getItem("idUsuario");
+        if (!idUsuario) return;
+
+        const res = await fetch(`${apiUrl}/lista/favoritos/${idUsuario}`);
+        const data = await res.json();
+
+        if (data && data.ok && data.datos) {
+          // El backend ahora devuelve el objeto directamente gracias al cambio anterior
+          setLista(data.datos); 
+        }
+
+      } catch (err) {
+        console.error("Error cargando lista:", err);
+      }
+    };
+
+    cargarLista();
+  }, [apiUrl]);
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -267,28 +277,48 @@ function Perfil() {
           <MDBTabsContent>
             <MDBTabsPane open={basicActive === "anime"}>
               <div className="lista-favoritos">
-                {favoritos.length === 0 ? (
-                  <p>No tienes favoritos aún</p>
+                {favoritos.filter(f => f.tipo === "anime").length === 0 ? (
+                  <p>No tienes animes favoritos aún</p>
                 ) : (
-                  favoritos.map((obra) => (
-                    <div key={obra.idobra} className="favorito-card">
-                      <img
-                        src={`${apiUrl}/obra/${obra.idobra}/imagen`}
-                        alt={obra.titulo}
-                        style={{ width: "80px", borderRadius: "8px" }}
-                      />
-                      <div>
-                        <h5>{obra.titulo}</h5>
-                        <p>{obra.genero}</p>
+                  favoritos
+                    .filter(f => f.tipo === "anime")
+                    .map((obra) => (
+                      <div key={obra.idobra} className="favorito-card" style={{ display: "flex", alignItems: "center", marginBottom: "15px", gap: "15px" }}>
+                        <img
+                          src={`${apiUrl}/obra/${obra.idobra}/imagen`}
+                          alt={obra.titulo}
+                          style={{ width: "80px", height: "110px", borderRadius: "8px", objectFit: "cover" }}
+                        />
+                        <div>
+                          <h5 style={{ margin: 0 }}>{obra.titulo}</h5>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
             </MDBTabsPane>
 
             <MDBTabsPane open={basicActive === "manga"}>
-              <p>Aquí irá la lista de manga del usuario</p>
+              <div className="lista-favoritos">
+                {favoritos.filter(f => f.tipo === "manga").length === 0 ? (
+                  <p>No tienes mangas favoritos aún</p>
+                ) : (
+                  favoritos
+                    .filter(f => f.tipo === "manga")
+                    .map((obra) => (
+                      <div key={obra.idobra} className="favorito-card" style={{ display: "flex", alignItems: "center", marginBottom: "15px", gap: "15px" }}>
+                        <img
+                          src={`${apiUrl}/obra/${obra.idobra}/imagen`}
+                          alt={obra.titulo}
+                          style={{ width: "80px", height: "110px", borderRadius: "8px", objectFit: "cover" }}
+                        />
+                        <div>
+                          <h5 style={{ margin: 0 }}>{obra.titulo}</h5>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
             </MDBTabsPane>
 
             <MDBTabsPane open={basicActive === "quiz"}>

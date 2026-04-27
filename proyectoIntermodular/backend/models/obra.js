@@ -52,7 +52,7 @@ module.exports=function(sequelize,DataTypes){
         },
         estado:{
 
-            type: DataTypes.ENUM('cancelado', 'finalizado', 'en emision', 'proximamente', 'pausado'),
+            type: DataTypes.ENUM('cancelado', 'finalizado', 'en emision', 'proximamente', 'pausado','eliminada'),
             allowNull:false,
         },
         idApi:{

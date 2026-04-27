@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "../sesion.css";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../config";
 
 function Login() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:3000/api/usuario/login", {
+    const res = await fetch(`${apiUrl}/usuario/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -39,6 +40,7 @@ function Login() {
       localStorage.setItem("token", data.token);
 
       localStorage.setItem("idUsuario", data.datos.idUsuario);
+      localStorage.setItem("admin", data.datos.rol === "administrador");
       alert("Login correcto");
 
 

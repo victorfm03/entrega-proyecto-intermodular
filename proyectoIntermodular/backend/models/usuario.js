@@ -44,10 +44,16 @@ module.exports=function(sequelize,DataTypes){
         },
         rol:{
 
-            type: DataTypes.ENUM('cliente','admin'),
+            type: DataTypes.ENUM('cliente','administrador'),
             allowNull:false,
             defaultValue: 'cliente'
         },
+        bloqueado:{
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            defaultValue: false
+        }
+
 
     },
 
