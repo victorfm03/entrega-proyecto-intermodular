@@ -9,6 +9,7 @@ var _lista = require("./lista");
 var _listaobra = require("./listaobra");
 var _puntua = require("./puntua");
 var _likesComentario=require("./likesComentario");
+var _obraTraduccion = require("./obra_traduccion");
 
 function initModels(sequelize){
 
@@ -16,6 +17,8 @@ function initModels(sequelize){
     var lista=_lista(sequelize,DataTypes);
 
     var obra=_obra(sequelize,DataTypes);
+
+    var obra_traduccion = _obraTraduccion(sequelize, DataTypes);
 
 
     var comentario=_comentario(sequelize,DataTypes);
@@ -61,7 +64,11 @@ function initModels(sequelize){
     usuario.hasMany(likesComentario,{as: "likesComentarios",foreignKey: "idUsuario"});
     comentario.hasMany(likesComentario,{as: "likesComentarios",foreignKey: "idComentario"});
 
-    return {usuario,obra,comentario,lista,listaobra,puntua,likesComentario};
+    obra.hasMany(obra_traduccion, {as: "traducciones",foreignKey: "obra_id"});
+
+    obra_traduccion.belongsTo(obra, {as: "obra",foreignKey: "obra_id"});
+
+    return {usuario,obra,comentario,lista,listaobra,puntua,likesComentario,obra_traduccion};
 
 }
 

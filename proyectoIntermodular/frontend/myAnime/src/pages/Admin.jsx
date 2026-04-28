@@ -4,6 +4,7 @@ import { MDBBtn, MDBContainer, MDBDropdown, MDBDropdownToggle, MDBDropdownMenu, 
 
 function Admin() {
   const navigate = useNavigate();
+  
 
   return (
     <MDBContainer className="py-5">

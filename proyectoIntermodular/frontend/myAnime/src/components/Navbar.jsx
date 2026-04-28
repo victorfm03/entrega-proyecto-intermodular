@@ -7,12 +7,14 @@ import {
   MDBIcon,
   MDBInput,
 } from "mdb-react-ui-kit";
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 
 import { ThemeContext } from "../ThemeProvider";
 import { useContext, useState, useEffect, useRef } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { apiUrl } from "../config.js";
+
+import "flag-icons/css/flag-icons.min.css";
 
 function Navbar() {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
@@ -24,6 +26,10 @@ function Navbar() {
   const enSesiones =
     location.pathname.startsWith("/login") ||
     location.pathname.startsWith("/register");
+  const enPaginasUsuario =
+    location.pathname.startsWith("/perfil") ||
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/quiz");
 
   const [activeTab, setActiveTab] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -32,8 +38,36 @@ function Navbar() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
-  const idUsuario = localStorage.getItem("idUsuario");
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const languageMenuRef = useRef(null);
 
+  const languages = [
+  { code: "es-ES", label: "CASTELLANO", flag: "es" },
+  { code: "es-MX", label: "ESPAÑOL LATINO", flag: "mx" },
+  { code: "en", label: "ENGLISH", flag: "gb" },
+  { code: "fr", label: "FRANÇAIS", flag: "fr" },
+  { code: "de", label: "DEUTSCH", flag: "de" },
+  { code: "it", label: "ITALIANO", flag: "it" },
+  { code: "pt", label: "PORTUGUÊS", flag: "pt" },
+  { code: "ja", label: "日本語", flag: "jp" },
+  { code: "ko", label: "한국어", flag: "kr" },
+];
+
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    localStorage.getItem("language") || "es",
+  );
+  const currentLanguage =
+    languages.find((lang) => lang.code === selectedLanguage) || languages[0];
+
+  const changeLanguage = (code) => {
+    setSelectedLanguage(code);
+    localStorage.setItem("language", code);
+    setLanguageMenuOpen(false);
+    window.location.reload();
+  };
+
+
+  const idUsuario = localStorage.getItem("idUsuario");
   const avatarUrl = idUsuario ? `${apiUrl}/usuario/perfil/${idUsuario}` : null;
 
   useEffect(() => {
@@ -47,7 +81,6 @@ function Navbar() {
     localStorage.removeItem("idUsuario");
     localStorage.removeItem("admin");
     navigate("/");
-    
   };
 
   // Mantener activeTab sincronizado con la URL
@@ -74,6 +107,24 @@ function Navbar() {
         document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [profileMenuOpen]);
+
+  // Cerrar menú de idioma al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        languageMenuRef.current &&
+        !languageMenuRef.current.contains(event.target)
+      ) {
+        setLanguageMenuOpen(false);
+      }
+    };
+
+    if (languageMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [languageMenuOpen]);
 
   return (
     <MDBNavbar
@@ -102,6 +153,89 @@ function Navbar() {
             <MDBInput type="search" placeholder="Buscar manga..." />
           </div>
 
+          <div
+            style={{ position: "relative", marginRight: "12px" }}
+            ref={languageMenuRef}
+          >
+            <MDBBtn
+              color="link"
+              onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
+              style={{
+                padding: "0.4rem 0.6rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                color: darkMode ? "#fff" : "#000",
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              <span
+                className={`fi fi-${currentLanguage.flag}`}
+                style={{
+                  width: "20px",
+                  height: "15px",
+                  borderRadius: "2px",
+                }}
+              ></span>
+              <span>{currentLanguage.label}</span>
+              <MDBIcon fas icon="angle-down" />
+            </MDBBtn>
+            {languageMenuOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  backgroundColor: darkMode ? "#2c2c2c" : "#ffffff",
+                  border: `1px solid ${darkMode ? "#444" : "#ddd"}`,
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  zIndex: 1000,
+                  minWidth: "220px",
+                  marginTop: "8px",
+                  overflow: "hidden",
+                }}
+              >
+                {languages.map((lang) => (
+                  <div
+                    key={lang.code}
+                    onClick={() => changeLanguage(lang.code)}
+                    style={{
+                      padding: "12px 16px",
+                      cursor: "pointer",
+                      color: darkMode ? "#fff" : "#000",
+                      borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      fontWeight:
+                        selectedLanguage === lang.code ? "bold" : "normal",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = darkMode
+                        ? "#3a3a3a"
+                        : "#f5f5f5")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
+                  >
+                    <span
+                      className={`fi fi-${lang.flag}`}
+                      style={{
+                        width: "20px",
+                        height: "15px",
+                        borderRadius: "2px",
+                      }}
+                    ></span>
+                    <span>{lang.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* BOTON DARK MODE */}
           <MDBBtn
             color="link"
@@ -112,164 +246,177 @@ function Navbar() {
           </MDBBtn>
 
           {isLoggedIn ? (
-  <div style={{ position: "relative" }} ref={profileMenuRef}>
-    {/* CONTENEDOR CIRCULAR (Clic aquí para abrir/cerrar) */}
-    <div
-      onClick={() => setProfileMenuOpen(!profileMenuOpen)} // <-- Cambia el estado
-      style={{
-        width: "40px",
-        height: "40px",
-        borderRadius: "50%",
-        overflow: "hidden",
-        backgroundColor: "#999",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer", // <-- Indica que es clicable
-      }}
-    >
-      <img
-        src={avatarUrl}
-        alt="Avatar"
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-        }}
-        onError={(e) => {
-          e.target.style.display = "none";
-          e.target.nextSibling.style.display = "flex";
-        }}
-      />
+            <div style={{ position: "relative" }} ref={profileMenuRef}>
+              {/* CONTENEDOR CIRCULAR (Clic aquí para abrir/cerrar) */}
+              <div
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)} // <-- Cambia el estado
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  backgroundColor: "#999",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer", // <-- Indica que es clicable
+                }}
+              >
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
+                />
 
-      <div
-        style={{
-          display: "none",
-          width: "100%",
-          height: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <MDBIcon
-          fas
-          icon="user"
-          style={{ color: "#fff", fontSize: "20px" }}
-        />
-      </div>
-    </div>
+                <div
+                  style={{
+                    display: "none",
+                    width: "100%",
+                    height: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <MDBIcon
+                    fas
+                    icon="user"
+                    style={{ color: "#fff", fontSize: "20px" }}
+                  />
+                </div>
+              </div>
 
-    {/* MENÚ DESPLEGABLE DE PERFIL */}
-    {profileMenuOpen && (
-      <div
-        className="profile-menu-dropdown"
-        style={{
-          position: "absolute",
-          top: "100%",
-          right: 0,
-          backgroundColor: darkMode ? "#2c2c2c" : "#ffffff",
-          border: `1px solid ${darkMode ? "#444" : "#ddd"}`,
-          borderRadius: "8px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          zIndex: 1000,
-          minWidth: "200px",
-          marginTop: "8px",
-        }}
-      >
-        <Link
-          to="/perfil"
-          className="profile-menu-item"
-          onClick={() => setProfileMenuOpen(false)}
-          style={{
-            display: "block",
-            padding: "12px 16px",
-            color: darkMode ? "#fff" : "#000",
-            textDecoration: "none",
-            borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
-            transition: "background-color 0.2s",
-          }}
-          onMouseEnter={(e) =>
-            (e.target.style.backgroundColor = darkMode ? "#3a3a3a" : "#f5f5f5")
-          }
-          onMouseLeave={(e) =>
-            (e.target.style.backgroundColor = "transparent")
-          }
-        >
-          <MDBIcon fas icon="user" className="me-2" /> Mi Perfil
-        </Link>
-{localStorage.getItem("admin") ?(
-        <Link
-          to="/admin"
-          className="profile-menu-item"
-          onClick={() => setProfileMenuOpen(false)}
-          style={{
-            display: "block",
-            padding: "12px 16px",
-            color: darkMode ? "#fff" : "#000",
-            textDecoration: "none",
-            borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
-            transition: "background-color 0.2s",
-          }}
-          onMouseEnter={(e) =>
-            (e.target.style.backgroundColor = darkMode ? "#3a3a3a" : "#f5f5f5")
-          }
-          onMouseLeave={(e) =>
-            (e.target.style.backgroundColor = "transparent")
-          }
-        >
-          <MDBIcon fas icon="key" className="me-2" /> Administración
-        </Link>
-    ):null}
+              {/* MENÚ DESPLEGABLE DE PERFIL */}
+              {profileMenuOpen && (
+                <div
+                  className="profile-menu-dropdown"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 0,
+                    backgroundColor: darkMode ? "#2c2c2c" : "#ffffff",
+                    border: `1px solid ${darkMode ? "#444" : "#ddd"}`,
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    zIndex: 1000,
+                    minWidth: "200px",
+                    marginTop: "8px",
+                  }}
+                >
+                  <Link
+                    to="/perfil"
+                    className="profile-menu-item"
+                    onClick={() => setProfileMenuOpen(false)}
+                    style={{
+                      display: "block",
+                      padding: "12px 16px",
+                      color: darkMode ? "#fff" : "#000",
+                      textDecoration: "none",
+                      borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.target.style.backgroundColor = darkMode
+                        ? "#3a3a3a"
+                        : "#f5f5f5")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.backgroundColor = "transparent")
+                    }
+                  >
+                    <MDBIcon fas icon="user" className="me-2" /> Mi Perfil
+                  </Link>
+                  {localStorage.getItem("admin") ? (
+                    <Link
+                      to="/admin"
+                      className="profile-menu-item"
+                      onClick={() => setProfileMenuOpen(false)}
+                      style={{
+                        display: "block",
+                        padding: "12px 16px",
+                        color: darkMode ? "#fff" : "#000",
+                        textDecoration: "none",
+                        borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = darkMode
+                          ? "#3a3a3a"
+                          : "#f5f5f5")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = "transparent")
+                      }
+                    >
+                      <MDBIcon fas icon="key" className="me-2" /> Administración
+                    </Link>
+                  ) : null}
 
-        <Link
-          to="/quiz"
-          className="profile-menu-item"
-          onClick={() => setProfileMenuOpen(false)}
-          style={{
-            display: "block",
-            padding: "12px 16px",
-            color: darkMode ? "#fff" : "#000",
-            textDecoration: "none",
-            borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
-            transition: "background-color 0.2s",
-          }}
-          onMouseEnter={(e) =>
-            (e.target.style.backgroundColor = darkMode ? "#3a3a3a" : "#f5f5f5")
-          }
-          onMouseLeave={(e) =>
-            (e.target.style.backgroundColor = "transparent")
-          }
-        >
-          <SportsEsportsIcon className="me-2" style={{ fontSize: "20px", verticalAlign: "middle" }} /> Quiz
-        </Link>
+                  <Link
+                    to="/quiz"
+                    className="profile-menu-item"
+                    onClick={() => setProfileMenuOpen(false)}
+                    style={{
+                      display: "block",
+                      padding: "12px 16px",
+                      color: darkMode ? "#fff" : "#000",
+                      textDecoration: "none",
+                      borderBottom: `1px solid ${darkMode ? "#444" : "#eee"}`,
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.target.style.backgroundColor = darkMode
+                        ? "#3a3a3a"
+                        : "#f5f5f5")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.backgroundColor = "transparent")
+                    }
+                  >
+                    <SportsEsportsIcon
+                      className="me-2"
+                      style={{ fontSize: "20px", verticalAlign: "middle" }}
+                    />{" "}
+                    Quiz
+                  </Link>
 
-        <button
-          className="profile-menu-item"
-          onClick={handleLogout}
-          style={{
-            display: "block",
-            width: "100%",
-            padding: "12px 16px",
-            color: darkMode ? "#fff" : "#000",
-            backgroundColor: "transparent",
-            border: "none",
-            cursor: "pointer",
-            textAlign: "left",
-            transition: "background-color 0.2s",
-          }}
-          onMouseEnter={(e) =>
-            (e.target.style.backgroundColor = darkMode ? "#3a3a3a" : "#f5f5f5")
-          }
-          onMouseLeave={(e) =>
-            (e.target.style.backgroundColor = "transparent")
-          }
-        >
-          <MDBIcon fas icon="sign-out-alt" className="me-2" /> Cerrar Sesión
-        </button>
-      </div>
-    )}
-  </div>
-) : (
+                  <button
+                    className="profile-menu-item"
+                    onClick={handleLogout}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: "12px 16px",
+                      color: darkMode ? "#fff" : "#000",
+                      backgroundColor: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.target.style.backgroundColor = darkMode
+                        ? "#3a3a3a"
+                        : "#f5f5f5")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.backgroundColor = "transparent")
+                    }
+                  >
+                    <MDBIcon fas icon="sign-out-alt" className="me-2" /> Cerrar
+                    Sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
             <div className="d-flex align-items-center gap-2">
               <Link to="/login">
                 <MDBBtn
@@ -295,13 +442,16 @@ function Navbar() {
         <MDBNavbarNav className="mt-3">
           <div className="nav-tabs-container" style={{ position: "relative" }}>
             {/* Slider solo si hay un tab activo */}
-            {activeTab && !enDetalleObra && !enSesiones && (
-              <div
-                className={`nav-slider ${activeTab === "anime" ? "active-anime" : "active-manga"}`}
-              />
-            )}
+            {activeTab &&
+              !enDetalleObra &&
+              !enSesiones &&
+              !enPaginasUsuario && (
+                <div
+                  className={`nav-slider ${activeTab === "anime" ? "active-anime" : "active-manga"}`}
+                />
+              )}
 
-            {enDetalleObra || enSesiones ? (
+            {enDetalleObra || enSesiones || enPaginasUsuario ? (
               <>
                 <MDBBtn
                   color="link"
@@ -337,7 +487,6 @@ function Navbar() {
                 </NavLink>
               </>
             )}
-            
           </div>
         </MDBNavbarNav>
       </MDBContainer>

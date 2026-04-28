@@ -1,4 +1,5 @@
 import CardObra from "./CardObra";
+import getTituloPorIdioma from "../utils/getTituloPorIdioma";
 
 function ListadoHorizontalObras({ obras, titulo, modo = "scroll" }) {
   return (
@@ -9,7 +10,7 @@ function ListadoHorizontalObras({ obras, titulo, modo = "scroll" }) {
         {obras.map((obra) => (
           <CardObra
             key={obra.idobra}
-            titulo={obra.titulo}
+            titulo={getTituloPorIdioma(obra)}
             id={obra.idobra}
           />
         ))}

@@ -19,7 +19,7 @@ module.exports=function(sequelize,DataTypes){
             allowNull:false,
         },
         titulo:{
-            type: DataTypes.STRING(200),
+            type: DataTypes.STRING(1000),
             allowNull:false,
         },
         sinopsis:{
@@ -33,7 +33,7 @@ module.exports=function(sequelize,DataTypes){
         fechalanzamiento:{
 
             type: DataTypes.DATE,
-            allowNull:false,
+            allowNull:true,
         },
 
         estudio:{

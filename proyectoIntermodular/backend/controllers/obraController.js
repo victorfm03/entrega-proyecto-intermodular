@@ -90,7 +90,13 @@ class obraController{
             const data= await Obra.findAll({
                 where: {
                     titulo: {[Op.like]: `%${titulo}%`}
-                }
+                },
+                include: [
+                    {
+                        model: models.traducciones,
+                        as: "traducciones",
+                    }
+                ]
             });
 
             if(data.length===0){
@@ -110,7 +116,15 @@ class obraController{
 
         try {
 
-            const data= await Obra.findAll();
+            const data= await Obra.findAll({
+                include: [
+                    {
+                        model: models.traducciones,
+                        as: "traducciones",
+                    }
+                ]
+            }
+            );
             res.json(Respuesta.exito(data,"Se recuperaron todos las obras"));
 
         }catch (err){
@@ -178,7 +192,10 @@ class obraController{
 
     }
 
+    
     async extraerObra(req, res) {
+    const esperar = (ms) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
   const tipo = req.body.tipo; // 'anime' o 'manga'
   var totalPaginas = 5; // número de páginas a traer (25 obras por página cada una)
 
@@ -194,6 +211,7 @@ class obraController{
 
   try {
     for (let pagina = 1; pagina <= totalPaginas; pagina++) {
+      await esperar(500);
       // 1️⃣ llamar a la API externa con paginación
       console.log(`https://api.jikan.moe/v4/${tipo}?page=${pagina}&limit=25${titulo}`)
       const response = await axios.get(`https://api.jikan.moe/v4/${tipo}?page=${pagina}&limit=25${titulo}`);
@@ -216,6 +234,7 @@ class obraController{
           popularidad: obra.popularity
         };
 
+        
         if (tipo === "anime") {
           obraData.estudio = (obra.studios || []).map(s => s.name).join(", ");
           obraData.fechalanzamiento = obra.aired?.from?.split("T")[0] || null;
@@ -227,10 +246,55 @@ class obraController{
 
         // 3️⃣ crear o actualizar según exista
         if (!obraBD) {
-          await Obra.create(obraData);
+          obraBD= await Obra.create(obraData);
         } else {
           await obraBD.update(obraData);
         }
+
+        for(const idioma of obra.titles){
+            let traduccion=null;
+            switch(idioma.type.toLowerCase()){
+                case "spanish":
+                    traduccion="es-ES";
+                    break;
+                case "english":
+                    traduccion="en";
+                    break;
+                case "french":
+                    traduccion="fr";
+                    break;
+                case "german":
+                    traduccion="de";
+                    break;
+                case "japanese":
+                    traduccion="ja";
+                    break;
+            }
+            if(traduccion){
+                let traduccionBd= await models.obra_traduccion.findOne({
+                        where: {
+                            obra_id: obraBD.idobra,
+                            idioma: traduccion
+                        }
+                    });
+                    if(traduccionBd){
+                        await models.obra_traduccion.update({
+                            titulo: idioma.title},{
+                            where: {
+                                obra_id: obraBD.idobra,
+                                idioma: traduccion
+                            }
+                        });
+                    }else{
+                        await models.obra_traduccion.create({
+                            obra_id: obraBD.idobra,
+                            idioma: traduccion,
+                            titulo: idioma.title
+                        });
+                    }
+            }
+        }
+
       }
     }
 
@@ -248,7 +312,13 @@ async getObrasTipo(req, res){
         try {
 
             var query={
-                where: tipo ? { tipo } : {}
+                where: tipo ? { tipo } : {},
+                include: [
+                    {
+                        model: models.obra_traduccion,
+                        as: "traducciones",
+                    }
+                ]
             }
 
             if(orden){

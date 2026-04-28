@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../config.js";
 import {
   MDBBtn,
   MDBRow,
   MDBCol,
+  MDBIcon,
 } from "mdb-react-ui-kit";
 import { ThemeContext } from "../ThemeProvider";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -51,12 +54,46 @@ const QUESTIONS = [
 
 function Quiz() {
   const { darkMode } = useContext(ThemeContext);
+  const navigate = useNavigate();
   const [gameState, setGameState] = useState("start"); // 'start', 'playing', 'finished'
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(15);
   const [selectedOption, setSelectedOption] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [highScore, setHighScore] = useState(0);
+
+  const idUsuario = localStorage.getItem("idUsuario");
+
+  // Obtener récord del usuario
+  useEffect(() => {
+    if (idUsuario) {
+      fetch(`${apiUrl}/usuario/${idUsuario}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.ok && data.datos.puntuacionquiz) {
+            setHighScore(data.datos.puntuacionquiz);
+          }
+        })
+        .catch(err => console.error("Error cargando récord:", err));
+    }
+  }, [idUsuario]);
+
+  // Actualizar récord si se supera al finalizar
+  useEffect(() => {
+    if (gameState === "finished" && score > highScore) {
+      setHighScore(score);
+      if (idUsuario) {
+        fetch(`${apiUrl}/usuario/${idUsuario}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ puntuacionquiz: score })
+        })
+        .then(res => res.json())
+        .catch(err => console.error("Error actualizando récord:", err));
+      }
+    }
+  }, [gameState, score, highScore, idUsuario]);
 
   const currentQuestion = QUESTIONS[currentQuestionIndex];
 
@@ -287,6 +324,54 @@ function Quiz() {
 
   return (
     <div style={pageStyle}>
+      {/* Botón de volver y Puntuación arriba a la izquierda */}
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        left: "20px",
+        display: "flex",
+        alignItems: "center",
+        gap: "15px",
+        zIndex: 1100
+      }}>
+        <MDBBtn
+          color="link"
+          onClick={() => navigate(-1)}
+          style={{
+            color: "rgba(255, 255, 255, 0.5)", // Gris muy pálido
+            padding: "10px",
+            textDecoration: "none",
+            backgroundColor: "transparent",
+            boxShadow: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px"
+          }}
+        >
+          <MDBIcon fas icon="arrow-left" size="1x" /> Volver
+        </MDBBtn>
+
+        {/* Badge de Puntuación */}
+        <div style={{
+          backgroundColor: "rgba(255, 255, 255, 0.15)",
+          backdropFilter: "blur(5px)",
+          padding: "8px 16px",
+          borderRadius: "12px",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          color: "white",
+          fontSize: "1.1rem",
+          fontWeight: "600",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}>
+          <TrophyIcon style={{ fontSize: "18px", color: "#ffd700" }} />
+          <span>{score}</span>
+          <span style={{ opacity: 0.5 }}>/</span>
+          <span style={{ color: "#ffd700" }}>{highScore}</span>
+        </div>
+      </div>
+
       {gameState === "start" && renderStartScreen()}
       {gameState === "playing" && renderPlayingScreen()}
       {gameState === "finished" && renderFinishedScreen()}

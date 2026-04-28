@@ -13,6 +13,7 @@ const listaObraRoutes=require("./routes/listaObraRoutes");
 
 const puntuaRoutes=require("./routes/puntuaRoutes");
 
+const traduccionRoutes=require("./routes/traduccionesRoutes");
 
 const cors=require("cors");
 
@@ -34,6 +35,8 @@ app.use("/api/lista",listaRoutes);
 app.use("/api/listaobra",listaObraRoutes);
 
 app.use("/api/puntua",puntuaRoutes);
+
+app.use("/api/traduccion",traduccionRoutes);
 
 
 app.listen(config.port, () => console.log("Servidor corriendo en http://localhost:" + config.port));

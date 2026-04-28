@@ -14,6 +14,9 @@ function Mangas() {
       if (response.ok) { 
         let data = await response.json(); 
         setTitulo(data.datos); 
+
+        console.log(data.datos);
+        
       }
 
     }
@@ -35,7 +38,6 @@ return (
 
           </div>
 
-           <Footer />
 
         </div>
       

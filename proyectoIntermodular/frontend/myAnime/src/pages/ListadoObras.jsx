@@ -81,7 +81,7 @@ function ListadoObras() {
             <th style={{ width: "100px" }}>ID</th>
             <th>Título</th>
             <th>Tipo</th>
-            <th>Fecha de Creación</th>
+            <th>Fecha de Estreno</th>
             <th>Estudio</th>
             <th>Autor/es</th>
             <th>Estado</th>
@@ -112,9 +112,9 @@ function ListadoObras() {
                 <td>{obra.idobra || obra.idObra}</td>
                 <td>{obra.titulo}</td>
                 <td>{obra.tipo}</td>
-                <td>{obra.fechaCreacion}</td>
+                <td>{obra.fechalanzamiento}</td>
                 <td>{obra.estudio || "sin estudio"}</td>
-                <td>{obra.autores}</td>
+                <td>{obra.autor}</td>
                 <td>{obra.estado === "eliminada" ? "eliminada" : obra.estado}</td>
                 <td>
                   <div className="d-flex justify-content-start align-items-center gap-2 flex-nowrap">
