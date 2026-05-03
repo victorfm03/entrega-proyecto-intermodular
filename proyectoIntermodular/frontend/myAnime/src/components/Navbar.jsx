@@ -16,10 +16,17 @@ import { apiUrl } from "../config.js";
 
 import "flag-icons/css/flag-icons.min.css";
 
-function Navbar() {
+function Navbar({ selectedLanguage, setSelectedLanguage }) {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      const query = searchTerm.trim();
+      navigate(query ? `/search?q=${encodeURIComponent(query)}` : "/search");
+    }
+  };
 
   // Detectar si estamos en DetalleObra
   const enDetalleObra = location.pathname.startsWith("/obra/");
@@ -33,6 +40,7 @@ function Navbar() {
 
   const [activeTab, setActiveTab] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Menú de perfil
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -42,30 +50,49 @@ function Navbar() {
   const languageMenuRef = useRef(null);
 
   const languages = [
-  { code: "es-ES", label: "CASTELLANO", flag: "es" },
-  { code: "es-MX", label: "ESPAÑOL LATINO", flag: "mx" },
+  { code: "es", label: "CASTELLANO", flag: "es" },
   { code: "en", label: "ENGLISH", flag: "gb" },
   { code: "fr", label: "FRANÇAIS", flag: "fr" },
   { code: "de", label: "DEUTSCH", flag: "de" },
-  { code: "it", label: "ITALIANO", flag: "it" },
   { code: "pt", label: "PORTUGUÊS", flag: "pt" },
   { code: "ja", label: "日本語", flag: "jp" },
-  { code: "ko", label: "한국어", flag: "kr" },
 ];
 
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    localStorage.getItem("language") || "es",
-  );
   const currentLanguage =
     languages.find((lang) => lang.code === selectedLanguage) || languages[0];
 
   const changeLanguage = (code) => {
-    setSelectedLanguage(code);
-    localStorage.setItem("language", code);
-    setLanguageMenuOpen(false);
-    window.location.reload();
+  setSelectedLanguage(code);
+  localStorage.setItem("language", code);
+  setLanguageMenuOpen(false);
+
+  const applyTranslate = () => {
+    const combo = document.querySelector(".goog-te-combo");
+
+    if (!combo) {
+      setTimeout(applyTranslate, 500);
+      return;
+    }
+
+    if (code === "es") {
+      // borrar cookie de Google Translate
+      document.cookie =
+        "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" +
+        window.location.hostname;
+
+      // recargar para volver al idioma original
+      window.location.reload();
+      return;
+    }
+
+    combo.value = code;
+    combo.dispatchEvent(new Event("change"));
   };
 
+  applyTranslate();
+};
 
   const idUsuario = localStorage.getItem("idUsuario");
   const avatarUrl = idUsuario ? `${apiUrl}/usuario/perfil/${idUsuario}` : null;
@@ -89,6 +116,12 @@ function Navbar() {
     else if (location.pathname.startsWith("/mangas")) setActiveTab("manga");
     else setActiveTab(null);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("q") || "";
+    setSearchTerm(q);
+  }, [location.search]);
 
   // Cerrar menú de perfil al hacer clic fuera
   useEffect(() => {
@@ -126,6 +159,8 @@ function Navbar() {
     }
   }, [languageMenuOpen]);
 
+  
+
   return (
     <MDBNavbar
       expand="lg"
@@ -150,7 +185,13 @@ function Navbar() {
 
           {/* BUSCADOR */}
           <div className="flex-grow-1 px-4">
-            <MDBInput type="search" placeholder="Buscar manga..." />
+            <MDBInput
+              type="search"
+              placeholder="Buscar obras..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
           </div>
 
           <div
@@ -472,7 +513,7 @@ function Navbar() {
                     isActive ? "nav-tab active" : "nav-tab"
                   }
                 >
-                  Anime
+                  <span translate="no">Anime</span>
                 </NavLink>
 
                 <div className="nav-tab-divider" style={{ flexGrow: 1 }}></div>
@@ -483,7 +524,7 @@ function Navbar() {
                     isActive ? "nav-tab active" : "nav-tab"
                   }
                 >
-                  Manga
+                  <span translate="no">Manga</span>
                 </NavLink>
               </>
             )}

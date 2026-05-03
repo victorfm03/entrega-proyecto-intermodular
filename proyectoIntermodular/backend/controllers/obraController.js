@@ -41,7 +41,14 @@ class obraController{
     
             try {
     
-                const data= await Obra.findByPk(id_obra);
+                const data= await Obra.findByPk(id_obra, {
+                    include: [
+                        {
+                            model: models.obra_traduccion,
+                            as: "traducciones",
+                        }
+                    ]
+                });
                 if(!data){
                     res.status(404).json(Respuesta.error(null, "Obra inexistente"));
                 }else{
@@ -89,11 +96,14 @@ class obraController{
 
             const data= await Obra.findAll({
                 where: {
-                    titulo: {[Op.like]: `%${titulo}%`}
+                    [Op.or]: [
+                        { titulo: {[Op.like]: `%${titulo}%`} },
+                        { '$traducciones.titulo$': {[Op.like]: `%${titulo}%`} }
+                    ]
                 },
                 include: [
                     {
-                        model: models.traducciones,
+                        model: models.obra_traduccion,
                         as: "traducciones",
                     }
                 ]
@@ -119,7 +129,7 @@ class obraController{
             const data= await Obra.findAll({
                 include: [
                     {
-                        model: models.traducciones,
+                        model: models.obra_traduccion,
                         as: "traducciones",
                     }
                 ]
@@ -255,7 +265,7 @@ class obraController{
             let traduccion=null;
             switch(idioma.type.toLowerCase()){
                 case "spanish":
-                    traduccion="es-ES";
+                    traduccion="es";
                     break;
                 case "english":
                     traduccion="en";
@@ -360,7 +370,13 @@ async getObrasTipo(req, res){
 
             var query={
                 where: tipo ? { tipo } : {},
-                limit: numeroDeObras ? parseInt(numeroDeObras) : 10
+                limit: numeroDeObras ? parseInt(numeroDeObras) : 10,
+                include: [
+                    {
+                        model: models.obra_traduccion,
+                        as: "traducciones",
+                    }
+                ]
             }
 
             if(orden){

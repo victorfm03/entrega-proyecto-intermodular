@@ -4,6 +4,7 @@ import ListadoHorizontalObras from "../components/ListadoHorizontalObras";
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { apiUrl } from "../config.js";
+import GoogleTranslate from "../components/GoogleTranslate";
 
 function Home() {
   const location = useLocation();
@@ -19,6 +20,25 @@ function Home() {
   const [recientesMangas, setRecientesMangas] = useState([]);
   const [puntuacionMangas, setPuntuacionMangas] = useState([]);
   const [proximosMangas, setProximosMangas] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    localStorage.getItem("language") || "es"
+  );
+
+  const getTitulo = (obra) => {
+    const traduccion = obra.traducciones?.find(
+      (t) => t.idioma === selectedLanguage
+    );
+
+    return {
+      ...obra,
+      titulo: traduccion?.titulo || obra.titulo_original || obra.titulo,
+    };
+  };
+
+  const handleLanguageChange = (nuevoIdioma) => {
+    localStorage.setItem("language", nuevoIdioma);
+    setSelectedLanguage(nuevoIdioma);
+  };
 
   useEffect(() => {
     if (!isHome) return;
@@ -46,13 +66,17 @@ function Home() {
               if (orden === "popularidad") resultados[tipo].populares = obras.slice(0, 6);
               if (orden === "recientes") {
                 resultados[tipo].recientes = obras.slice(0, 6);
-                // Filtrar Próximamente
+                // Filtrar Próximamente - obras con estado proximamente cuya fecha no ha pasado
                 const proximos = obras
                   .filter(o => {
-                    if (!o.fechalanzamiento) return false;
+                    if (o.estado !== "proximamente") return false;
+                    if (!o.fechalanzamiento) return true; // Mostrar obras sin fecha confirmada
                     // Comparar solo la fecha, ignorando hora
                     const fecha = new Date(o.fechalanzamiento);
-                    return fecha.setHours(0,0,0,0) > hoy.setHours(0,0,0,0);
+                    fecha.setHours(0, 0, 0, 0);
+                    const hoyNormalized = new Date();
+                    hoyNormalized.setHours(0, 0, 0, 0);
+                    return fecha > hoyNormalized;
                   })
                   .slice(0, 6);
                 resultados[tipo].proximos = proximos;
@@ -81,22 +105,27 @@ function Home() {
   }, [isHome]);
 
   return (
+    
     <div className="main-content">
-      <Navbar />
+      <GoogleTranslate language={selectedLanguage} />
+      <Navbar 
+        selectedLanguage={selectedLanguage}
+        setSelectedLanguage={setSelectedLanguage}
+      />
       <div className="content">
         {isHome ? (
           <>
             {/* --- ANIMES --- */}
-            <ListadoHorizontalObras obras={popularesAnimes} titulo="Animes Populares" />
-            <ListadoHorizontalObras obras={recientesAnimes} titulo="Animes Recientes" />
-            <ListadoHorizontalObras obras={puntuacionAnimes} titulo="Animes con Mayor Puntuación" />
-            <ListadoHorizontalObras obras={proximosAnimes} titulo="Animes Próximamente" />
+            <ListadoHorizontalObras obras={popularesAnimes.map(getTitulo)} titulo="Animes Populares" />
+            <ListadoHorizontalObras obras={recientesAnimes.map(getTitulo)} titulo="Animes Recientes" />
+            <ListadoHorizontalObras obras={puntuacionAnimes.map(getTitulo)} titulo="Animes con Mayor Puntuación" />
+            <ListadoHorizontalObras obras={proximosAnimes.map(getTitulo)} titulo="Animes Próximamente" />
 
             {/* --- MANGAS --- */}
-            <ListadoHorizontalObras obras={popularesMangas} titulo="Mangas Populares" />
-            <ListadoHorizontalObras obras={recientesMangas} titulo="Mangas Recientes" />
-            <ListadoHorizontalObras obras={puntuacionMangas} titulo="Mangas con Mayor Puntuación" />
-            <ListadoHorizontalObras obras={proximosMangas} titulo="Mangas Próximamente" />
+            <ListadoHorizontalObras obras={popularesMangas.map(getTitulo)} titulo="Mangas Populares" />
+            <ListadoHorizontalObras obras={recientesMangas.map(getTitulo)} titulo="Mangas Recientes" />
+            <ListadoHorizontalObras obras={puntuacionMangas.map(getTitulo)} titulo="Mangas con Mayor Puntuación" />
+            <ListadoHorizontalObras obras={proximosMangas.map(getTitulo)} titulo="Mangas Próximamente" />
           </>
         ) : (
           <Outlet />

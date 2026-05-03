@@ -48,15 +48,9 @@ function getTituloPorIdioma(obra, idioma) {
         const buscarTitulo = titles.find((t) => t.type?.toLowerCase() === type.toLowerCase())?.title;
 
         switch (idioma) {
-            case "es-ES":
+            case "es":
                 return (
                     buscarTitulo("castellano") ||
-                    obra.title_english ||
-                    obra.title || null
-                );
-            case "es-MX":
-                return (
-                    buscarTitulo("español latino") ||
                     obra.title_english ||
                     obra.title || null
                 );

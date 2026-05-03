@@ -229,13 +229,6 @@ function Perfil() {
                   <EmailIcon /> {user.email}
                 </p>
 
-                <p>
-                  <InsertLinkIcon /> mariagonzalez.dev
-                </p>
-
-                <p>
-                  <CalendarMonthIcon /> Miembro desde 2018
-                </p>
               </div>
             </MDBCol>
           </MDBRow>
@@ -265,10 +258,7 @@ function Perfil() {
             </MDBTabsItem>
 
             <MDBTabsItem>
-              <MDBTabsLink
-                onClick={() => handleBasicClick("quiz")}
-                active={basicActive === "quiz"}
-              >
+              <MDBTabsLink>
                 Quiz Récord
               </MDBTabsLink>
             </MDBTabsItem>

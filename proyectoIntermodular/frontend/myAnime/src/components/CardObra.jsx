@@ -9,7 +9,7 @@ function CardObra({ titulo, id }) {
   return (
     <MDBCard
       className="card-obra"
-      style={{ cursor: "pointer" }}
+      style={{ cursor: "pointer", width: "280px" }}
       onClick={() => navigate(`/obra/${id}`)}
     >
       <MDBCardImage src={url} alt={titulo} position="top" style={{ height: "250px", objectFit: "cover" }} />

@@ -6,6 +6,7 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import { apiUrl } from "../config.js";
+import getTituloPorIdioma from "../utils/getTituloPorIdioma";
 import { FaHeart, FaCheck } from "react-icons/fa";
 import { MDBIcon } from "mdb-react-ui-kit";
 import { useFavorites } from "../components/FavoritesContext";
@@ -464,6 +465,8 @@ function DetalleObra() {
   if (cargando) return <p>Cargando...</p>;
   if (error) return <p>{error}</p>;
 
+  const tituloTraducido = obra ? getTituloPorIdioma(obra) : "";
+
   return (
     <div className="detalle-container">
       {/* Header y Sinopsis (Omitidos por brevedad, se mantienen igual) */}
@@ -471,11 +474,11 @@ function DetalleObra() {
         <img
           className="detalle-portada"
           src={`${apiUrl}/obra/${obra.idobra}/imagen`}
-          alt={obra.titulo}
+          alt={tituloTraducido}
         />
 
         <div className="detalle-info">
-          <h1 className="detalle-titulo">{obra.titulo}</h1>
+          <h1 className="detalle-titulo">{tituloTraducido}</h1>
           <p>
             <strong>Tipo:</strong> {obra.tipo} | <strong>Género:</strong>{" "}
             {obra.genero}
@@ -489,7 +492,7 @@ function DetalleObra() {
               <strong>Autor:</strong> {obra.autor || "Desconocido"}
             </p>
           )}
-          <p className="detalle-sinopsis">{obra.sinopsis}</p>
+          <p className="detalle-sinopsis" lang="en">{obra.sinopsis}</p>
         </div>
       </div>
 

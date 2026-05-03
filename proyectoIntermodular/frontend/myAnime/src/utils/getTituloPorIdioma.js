@@ -1,6 +1,6 @@
 const getTituloPorIdioma = (obra) => {
   const selectedLanguage =
-    localStorage.getItem("language") || "es-ES";
+    localStorage.getItem("language") || "es";
 
   if (!obra) return "Sin título";
 
