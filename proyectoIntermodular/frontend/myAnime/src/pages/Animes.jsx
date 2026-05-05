@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import ListadoHorizontalObras from "../components/ListadoHorizontalObras";
-import Footer from "../components/Footer";
+import AlphabeticalIndex from "../components/AlphabeticalIndex";
 import { apiUrl } from "../config.js";
+import getTituloPorIdioma from "../utils/getTituloPorIdioma";
 
 function Animes() {
+  const { selectedLanguage } = useOutletContext();
   const [obras, setObras] = useState([]);
 
   useEffect(() => {
@@ -21,16 +24,65 @@ function Animes() {
     getObras();
   }, []);
 
+  const groupedObras = useMemo(() => {
+    const groups = {};
+    obras.forEach((obra) => {
+      const titulo = getTituloPorIdioma(obra);
+      const firstLetter = titulo.charAt(0).toUpperCase();
+      const letter = /^[A-Z]$/.test(firstLetter) ? firstLetter : "#";
+      if (!groups[letter]) groups[letter] = [];
+      groups[letter].push(obra);
+    });
+    return Object.keys(groups)
+      .sort()
+      .reduce((acc, key) => {
+        acc[key] = groups[key];
+        return acc;
+      }, {});
+  }, [obras, selectedLanguage]); // Añadido selectedLanguage como dependencia
+
+  const letters = useMemo(() => Object.keys(groupedObras), [groupedObras]);
+
+  const scrollToLetter = (letter) => {
+    const element = document.getElementById(`letter-section-${letter}`);
+    if (element) {
+      const offset = 80; // Ajuste para la navbar
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <>
       <div className="main-content">
+        <AlphabeticalIndex letters={letters} onLetterClick={scrollToLetter} />
         <div className="content">
-          <ListadoHorizontalObras
-            obras={obras}
-            modo="grid"
-          />
+          {letters.length > 0 ? (
+            letters.map((letter) => (
+              <div key={letter} id={`letter-section-${letter}`} className="mb-5">
+                <h2
+                  style={{
+                    marginLeft: "2rem",
+                    marginTop: "2rem",
+                    color: "#000",
+                    fontWeight: "800",
+                    borderBottom: "2px solid #eee",
+                    paddingBottom: "10px",
+                  }}
+                >
+                  {letter}
+                </h2>
+                <ListadoHorizontalObras obras={groupedObras[letter]} modo="grid" />
+              </div>
+            ))
+          ) : (
+            <p className="text-center mt-5">Cargando animes...</p>
+          )}
         </div>
-
       </div>
     </>
   );

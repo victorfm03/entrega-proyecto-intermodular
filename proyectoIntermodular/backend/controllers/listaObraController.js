@@ -91,16 +91,22 @@ async getAllFavoritos(req, res) {
     const idusuario = req.params.idusuario;
     try {
         const favoritos = await models.obra.findAll({
-            include: [{
-                model: models.listaobra,
-                as: 'listaobras', // OBLIGATORIO: Debe coincidir con init-models.js
-                required: true,
-                include: [{
-                    model: models.lista,
-                    as: 'idlista_lista', // OBLIGATORIO: Debe coincidir con init-models.js
-                    where: { idusuario: idusuario, nombrelista: "Favoritos" },
-                }]
-            }]
+            include: [
+                {
+                    model: models.listaobra,
+                    as: 'listaobras', // OBLIGATORIO: Debe coincidir con init-models.js
+                    required: true,
+                    include: [{
+                        model: models.lista,
+                        as: 'idlista_lista', // OBLIGATORIO: Debe coincidir con init-models.js
+                        where: { idusuario: idusuario, nombrelista: "Favoritos" },
+                    }]
+                },
+                {
+                    model: models.obra_traduccion,
+                    as: 'traducciones'
+                }
+            ]
         });
         res.json(Respuesta.exito(favoritos, "Se recuperaron los favoritos"));
     } catch (err) {

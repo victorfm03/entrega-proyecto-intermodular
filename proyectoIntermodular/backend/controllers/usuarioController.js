@@ -184,36 +184,38 @@ class UsuarioController{
 
 
 
-    async updateMaxScore(req, res){
+    async updateMaxScore(req, res) {
+    const { puntuacionquiz, idUsuario } = req.body;
+    const id_params = req.params.id_usuario;
 
-        const usuario= req.body;
-        const id_usuario= req.params.id_usuario;
-
-        console.log(usuario);
-
-        if (id_usuario!= usuario.idUsuario){
-            return res.status(400).json(Respuesta.error(null,"No existe el id: "+id_usuario))
-        }
-
-        try {
-
-            const numFilas= await Usuario.update({puntuacionquiz: usuario.puntuacionquiz},{where:{idUsuario:id_usuario}});
-
-            if (numFilas == 0) {
-
-                res.status(404).json(Respuesta.error(null, "No se pudo modificar el usuario con el id: " + id_usuario));
-            }else{
-
-                res.status(204).send();
-
-            }
-
-
-        }catch (err){
-            logMensaje("Error: "+err)
-            res.status(500).json(Respuesta.error(null, "No se pudieron actualizar los usuarios"))
-        }
-
+    // Validación de ID
+    if (id_params != idUsuario) {
+        return res.status(400).json(Respuesta.error(null, "El ID del parámetro no coincide con el del cuerpo"));
     }
+
+    try {
+        // Opcional: Buscar el usuario primero para asegurar que no bajamos la puntuación
+        const user = await Usuario.findByPk(id_params);
+        
+        if (!user) {
+            return res.status(404).json(Respuesta.error(null, "Usuario no encontrado"));
+        }
+
+        // Solo actualizamos si la nueva puntuación es mayor a la existente
+        if (puntuacionquiz > user.puntuacionquiz) {
+            await Usuario.update(
+                { puntuacionquiz: puntuacionquiz },
+                { where: { idUsuario: id_params } }
+            );
+            return res.status(200).json(Respuesta.exito(null, "Nuevo récord establecido"));
+        } else {
+            return res.status(200).json(Respuesta.exito(null, "Puntuación actual no supera al récord"));
+        }
+
+    } catch (err) {
+        logMensaje("Error: " + err);
+        res.status(500).json(Respuesta.error(null, "Error interno al actualizar puntuación"));
+    }
+}
 }
 module.exports=new UsuarioController()

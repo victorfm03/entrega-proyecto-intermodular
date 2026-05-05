@@ -4,45 +4,50 @@ import { apiUrl } from "../config.js";
 import getTituloPorIdioma from "../utils/getTituloPorIdioma";
 
 const estadoLabels = {
-  "en emision": "Viendo",
+  "en emision": "en emision",
   finalizado: "Completado",
-  proximamente: "Planeo ver",
-  cancelado: "Abandonado",
+  proximamente: "proximamente",
+  cancelado: "cancelado",
   pausado: "Pausado",
-  eliminada: "Abandonado",
+  eliminada: "cancelado",
 };
 
 const estadoColores = {
-  Viendo: "#4e9cff",
+  "en emision": "#4e9cff",
   Leyendo: "#7f5cff",
   Completado: "#22c55e",
-  "Planeo ver": "#0ea5e9",
-  "Planeo leer": "#f59e0b",
-  Abandonado: "#f87171",
+  "proximamente": "#f59e0b",
+  cancelado: "#f87171",
   Pausado: "#f97316",
 };
 
 function Search() {
   const [obras, setObras] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams(); // Añadido setSearchParams
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
   const titulo = searchParams.get("q") || "";
 
-  useEffect(() => {
-    async function getObraByTitulo() {
-      if (!titulo.trim()) {
-        setObras([]);
-        return;
-      }
+  // Manejador para el buscador interno de la página de búsqueda
+  const handleInternalSearch = (e) => {
+    if (e.key === "Enter") {
+      const newQuery = e.target.value.trim();
+      setSearchParams({ q: newQuery });
+    }
+  };
 
+  useEffect(() => {
+    async function getObras() {
       setLoading(true);
       try {
-        const response = await fetch(
-          `${apiUrl}/obra/titulo/${encodeURIComponent(titulo.trim())}`
-        );
+        let url = `${apiUrl}/obra`; // Por defecto todas las obras
+        if (titulo.trim()) {
+          url = `${apiUrl}/obra/titulo/${encodeURIComponent(titulo.trim())}`;
+        }
+
+        const response = await fetch(url);
 
         if (response.ok) {
           const data = await response.json();
@@ -50,23 +55,25 @@ function Search() {
             ? data.datos
             : [data.datos].filter(Boolean);
 
-          obrasData.sort((a, b) => {
-            const tituloA = (getTituloPorIdioma(a) || "").toLowerCase();
-            const tituloB = (getTituloPorIdioma(b) || "").toLowerCase();
-            const searchTerm = titulo.toLowerCase();
+          if (titulo.trim()) {
+            obrasData.sort((a, b) => {
+              const tituloA = (getTituloPorIdioma(a) || "").toLowerCase();
+              const tituloB = (getTituloPorIdioma(b) || "").toLowerCase();
+              const searchTerm = titulo.toLowerCase();
 
-            const startsWithA = tituloA.startsWith(searchTerm);
-            const startsWithB = tituloB.startsWith(searchTerm);
+              const startsWithA = tituloA.startsWith(searchTerm);
+              const startsWithB = tituloB.startsWith(searchTerm);
 
-            if (startsWithA && !startsWithB) return -1;
-            if (!startsWithA && startsWithB) return 1;
+              if (startsWithA && !startsWithB) return -1;
+              if (!startsWithA && startsWithB) return 1;
 
-            const indexA = tituloA.indexOf(searchTerm);
-            const indexB = tituloB.indexOf(searchTerm);
-            if (indexA !== indexB) return indexA - indexB;
+              const indexA = tituloA.indexOf(searchTerm);
+              const indexB = tituloB.indexOf(searchTerm);
+              if (indexA !== indexB) return indexA - indexB;
 
-            return tituloA.length - tituloB.length;
-          });
+              return tituloA.length - tituloB.length;
+            });
+          }
 
           setObras(obrasData);
         } else {
@@ -80,7 +87,7 @@ function Search() {
       }
     }
 
-    const timeoutId = setTimeout(getObraByTitulo, 300);
+    const timeoutId = setTimeout(getObras, 300);
     return () => clearTimeout(timeoutId);
   }, [titulo]);
 
@@ -99,6 +106,52 @@ function Search() {
       })
       .filter((obra) => {
         if (filterStatus === "all") return true;
+        
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const fechaLanzamiento = obra.fechalanzamiento ? new Date(obra.fechalanzamiento) : null;
+        if (fechaLanzamiento) fechaLanzamiento.setHours(0, 0, 0, 0);
+
+        // Detectar si es una obra de un solo evento (película, especial, etc.)
+        const tituloObra = (getTituloPorIdioma(obra) || "").toLowerCase();
+        const generosObra = (obra.genero || "").toLowerCase();
+        const esEventoUnico = 
+          tituloObra.includes("movie") || 
+          tituloObra.includes("special") || 
+          tituloObra.includes("ova") || 
+          tituloObra.includes("ona") ||
+          generosObra.includes("movie") || 
+          generosObra.includes("special") || 
+          generosObra.includes("ova") || 
+          generosObra.includes("ona");
+
+        // Lógica para "proximamente"
+        if (filterStatus === "proximamente") {
+          if (obra.estado !== "proximamente") return false;
+          if (!fechaLanzamiento) return true; 
+          return fechaLanzamiento > hoy;
+        }
+
+        // Lógica para "en emision"
+        if (filterStatus === "en emision") {
+          let matches = false;
+          if (obra.estado === "en emision") matches = true;
+          if (obra.estado === "proximamente" && fechaLanzamiento && fechaLanzamiento <= hoy) matches = true;
+          
+          // Si es evento único y ya pasó la fecha, no está en emisión, está finalizado
+          if (matches && esEventoUnico && fechaLanzamiento && fechaLanzamiento < hoy) return false;
+          
+          return matches;
+        }
+
+        // Lógica para "finalizado" (Completado)
+        if (filterStatus === "finalizado") {
+          if (obra.estado === "finalizado") return true;
+          // Si es un evento único y la fecha ya pasó, se considera finalizado
+          if (esEventoUnico && fechaLanzamiento && fechaLanzamiento < hoy) return true;
+          return false;
+        }
+
         return obra.estado === filterStatus;
       });
   }, [obras, filterType, filterStatus, titulo]);
@@ -212,8 +265,8 @@ function Search() {
               <span style={{ fontSize: "18px" }}>🔎</span>
               <input
                 type="text"
-                value={titulo}
-                readOnly
+                defaultValue={titulo}
+                onKeyDown={handleInternalSearch}
                 placeholder="Buscar anime o manga..."
                 style={{
                   width: "100%",
@@ -232,9 +285,45 @@ function Search() {
               <p style={{ color: "#64748b" }}>Cargando...</p>
             </div>
           ) : filteredObras.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", // Cambiado auto-fit por auto-fill
+              gap: "24px" 
+            }}>
               {filteredObras.map((obra) => {
-                const estadoLabel = estadoLabels[obra.estado] || "Desconocido";
+                let actualEstado = obra.estado;
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const fechaLanzamiento = obra.fechalanzamiento ? new Date(obra.fechalanzamiento) : null;
+                if (fechaLanzamiento) fechaLanzamiento.setHours(0, 0, 0, 0);
+
+                // Detectar si es una obra de un solo evento (película, especial, etc.)
+                const tituloObra = (getTituloPorIdioma(obra) || "").toLowerCase();
+                const generosObra = (obra.genero || "").toLowerCase();
+                const esEventoUnico = 
+                  tituloObra.includes("movie") || 
+                  tituloObra.includes("special") || 
+                  tituloObra.includes("ova") || 
+                  tituloObra.includes("ona") ||
+                  generosObra.includes("movie") || 
+                  generosObra.includes("special") || 
+                  generosObra.includes("ova") || 
+                  generosObra.includes("ona");
+
+                // Lógica de estado dinámico
+                if (actualEstado === "proximamente" && fechaLanzamiento && fechaLanzamiento <= hoy) {
+                  // Si es evento único y ya pasó la fecha, ya está finalizado
+                  if (esEventoUnico && fechaLanzamiento < hoy) {
+                    actualEstado = "finalizado";
+                  } else {
+                    actualEstado = "en emision";
+                  }
+                } else if (actualEstado === "en emision" && esEventoUnico && fechaLanzamiento && fechaLanzamiento < hoy) {
+                  // Si ya estaba como emisión pero es evento único y ya pasó, marcar como finalizado
+                  actualEstado = "finalizado";
+                }
+
+                const estadoLabel = estadoLabels[actualEstado] || "Desconocido";
                 const badgeColor = estadoColores[estadoLabel] || "#60a5fa";
                 const year = obra.fechalanzamiento ? new Date(obra.fechalanzamiento).getFullYear() : "N/A";
                 const score = Number(obra.puntuacion);
@@ -274,36 +363,6 @@ function Search() {
                       >
                         {estadoLabel}
                       </span>
-                      <div style={{ position: "absolute", top: "18px", right: "18px", display: "flex", gap: "10px" }}>
-                        <span
-                          style={{
-                            width: "38px",
-                            height: "38px",
-                            borderRadius: "14px",
-                            background: "rgba(255,255,255,0.92)",
-                            display: "grid",
-                            placeItems: "center",
-                            color: "#334155",
-                            fontSize: "18px",
-                          }}
-                        >
-                          ☰
-                        </span>
-                        <span
-                          style={{
-                            width: "38px",
-                            height: "38px",
-                            borderRadius: "14px",
-                            background: "rgba(255,255,255,0.92)",
-                            display: "grid",
-                            placeItems: "center",
-                            color: "#334155",
-                            fontSize: "18px",
-                          }}
-                        >
-                          ⋮
-                        </span>
-                      </div>
                     </div>
                     <div style={{ padding: "22px" }}>
                       <p style={{ margin: 0, fontSize: "12px", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#64748b" }}>

@@ -16,7 +16,89 @@ import { apiUrl } from "../config.js";
 
 import "flag-icons/css/flag-icons.min.css";
 
+const translations = {
+  es: {
+    search: "Buscar obras...",
+    profile: "Mi Perfil",
+    admin: "Administración",
+    quiz: "Quiz",
+    logout: "Cerrar Sesión",
+    login: "Iniciar Sesión",
+    register: "Registrarse",
+    back: "Volver",
+    home: "Inicio",
+    anime: "Anime",
+    manga: "Manga",
+  },
+  en: {
+    search: "Search works...",
+    profile: "My Profile",
+    admin: "Administration",
+    quiz: "Quiz",
+    logout: "Logout",
+    login: "Login",
+    register: "Register",
+    back: "Back",
+    home: "Home",
+    anime: "Anime",
+    manga: "Manga",
+  },
+  fr: {
+    search: "Rechercher...",
+    profile: "Mon Profil",
+    admin: "Administration",
+    quiz: "Quiz",
+    logout: "Déconnexion",
+    login: "Connexion",
+    register: "S'inscrire",
+    back: "Retour",
+    home: "Accueil",
+    anime: "Animé",
+    manga: "Manga",
+  },
+  de: {
+    search: "Suche...",
+    profile: "Mein Profil",
+    admin: "Administration",
+    quiz: "Quiz",
+    logout: "Abmelden",
+    login: "Anmelden",
+    register: "Registrieren",
+    back: "Zurück",
+    home: "Startseite",
+    anime: "Anime",
+    manga: "Manga",
+  },
+  pt: {
+    search: "Buscar...",
+    profile: "Meu Perfil",
+    admin: "Administração",
+    quiz: "Quiz",
+    logout: "Sair",
+    login: "Entrar",
+    register: "Registrar",
+    back: "Voltar",
+    home: "Início",
+    anime: "Anime",
+    manga: "Mangá",
+  },
+  ja: {
+    search: "検索...",
+    profile: "プロフィール",
+    admin: "管理",
+    quiz: "クイズ",
+    logout: "ログアウト",
+    login: "ログイン",
+    register: "会員登録",
+    back: "戻る",
+    home: "ホーム",
+    anime: "アニメ",
+    manga: "マンガ",
+  },
+};
+
 function Navbar({ selectedLanguage, setSelectedLanguage }) {
+  const t = translations[selectedLanguage] || translations.es;
   const { darkMode, setDarkMode } = useContext(ThemeContext);
   const location = useLocation();
   const navigate = useNavigate();
@@ -24,6 +106,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       const query = searchTerm.trim();
+      setSearchTerm(""); // Limpiar la barra al buscar
       navigate(query ? `/search?q=${encodeURIComponent(query)}` : "/search");
     }
   };
@@ -62,28 +145,33 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
     languages.find((lang) => lang.code === selectedLanguage) || languages[0];
 
   const changeLanguage = (code) => {
-  setSelectedLanguage(code);
-  localStorage.setItem("language", code);
-  setLanguageMenuOpen(false);
+    setSelectedLanguage(code);
+    localStorage.setItem("language", code);
+    setLanguageMenuOpen(false);
 
-  const applyTranslate = () => {
+    // Si es español, a veces es mejor limpiar la traducción de Google para que no intente traducir lo que ya está en español
+    if (code === "es") {
+      const restoreOriginal = () => {
+        const iframe = document.querySelector('iframe.goog-te-banner-frame');
+        if (iframe) {
+          const closeBtn = iframe.contentWindow.document.querySelector('.goog-close-link');
+          if (closeBtn) closeBtn.click();
+        }
+        
+        const combo = document.querySelector(".goog-te-combo");
+        if (combo) {
+          combo.value = "es";
+          combo.dispatchEvent(new Event("change"));
+        }
+      };
+      restoreOriginal();
+    }
+
+    const applyTranslate = () => {
     const combo = document.querySelector(".goog-te-combo");
 
     if (!combo) {
       setTimeout(applyTranslate, 500);
-      return;
-    }
-
-    if (code === "es") {
-      // borrar cookie de Google Translate
-      document.cookie =
-        "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie =
-        "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" +
-        window.location.hostname;
-
-      // recargar para volver al idioma original
-      window.location.reload();
       return;
     }
 
@@ -116,12 +204,6 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
     else if (location.pathname.startsWith("/mangas")) setActiveTab("manga");
     else setActiveTab(null);
   }, [location.pathname]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const q = params.get("q") || "";
-    setSearchTerm(q);
-  }, [location.search]);
 
   // Cerrar menú de perfil al hacer clic fuera
   useEffect(() => {
@@ -187,7 +269,8 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
           <div className="flex-grow-1 px-4">
             <MDBInput
               type="search"
-              placeholder="Buscar obras..."
+              label={t.search}
+              placeholder={t.search}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -219,7 +302,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                   borderRadius: "2px",
                 }}
               ></span>
-              <span>{currentLanguage.label}</span>
+              <span translate="no">{currentLanguage.label}</span>
               <MDBIcon fas icon="angle-down" />
             </MDBBtn>
             {languageMenuOpen && (
@@ -270,7 +353,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                         borderRadius: "2px",
                       }}
                     ></span>
-                    <span>{lang.label}</span>
+                    <span translate="no">{lang.label}</span>
                   </div>
                 ))}
               </div>
@@ -372,7 +455,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                       (e.target.style.backgroundColor = "transparent")
                     }
                   >
-                    <MDBIcon fas icon="user" className="me-2" /> Mi Perfil
+                    <MDBIcon fas icon="user" className="me-2" /> {t.profile}
                   </Link>
                   {localStorage.getItem("admin") ? (
                     <Link
@@ -396,7 +479,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                         (e.target.style.backgroundColor = "transparent")
                       }
                     >
-                      <MDBIcon fas icon="key" className="me-2" /> Administración
+                      <MDBIcon fas icon="key" className="me-2" /> {t.admin}
                     </Link>
                   ) : null}
 
@@ -425,7 +508,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                       className="me-2"
                       style={{ fontSize: "20px", verticalAlign: "middle" }}
                     />{" "}
-                    Quiz
+                    {t.quiz}
                   </Link>
 
                   <button
@@ -451,8 +534,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                       (e.target.style.backgroundColor = "transparent")
                     }
                   >
-                    <MDBIcon fas icon="sign-out-alt" className="me-2" /> Cerrar
-                    Sesión
+                    <MDBIcon fas icon="sign-out-alt" className="me-2" /> {t.logout}
                   </button>
                 </div>
               )}
@@ -467,12 +549,12 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                     padding: "0.5rem 0.75rem",
                   }}
                 >
-                  Iniciar Sesión
+                  {t.login}
                 </MDBBtn>
               </Link>
               <Link to="/register">
                 <MDBBtn color="primary" style={{ padding: "0.5rem 0.85rem" }}>
-                  Registrarse
+                  {t.register}
                 </MDBBtn>
               </Link>
             </div>
@@ -499,10 +581,10 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                   onClick={() => navigate(-1)}
                   className="nav-tab"
                 >
-                  <MDBIcon fas icon="arrow-left" /> Volver
+                  <MDBIcon fas icon="arrow-left" /> {t.back}
                 </MDBBtn>
                 <Link to="/" className="nav-tab">
-                  <MDBIcon fas icon="home" /> Inicio
+                  <MDBIcon fas icon="home" /> {t.home}
                 </Link>
               </>
             ) : (
@@ -513,7 +595,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                     isActive ? "nav-tab active" : "nav-tab"
                   }
                 >
-                  <span translate="no">Anime</span>
+                  <span translate="no">{t.anime}</span>
                 </NavLink>
 
                 <div className="nav-tab-divider" style={{ flexGrow: 1 }}></div>
@@ -524,7 +606,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                     isActive ? "nav-tab active" : "nav-tab"
                   }
                 >
-                  <span translate="no">Manga</span>
+                  <span translate="no">{t.manga}</span>
                 </NavLink>
               </>
             )}

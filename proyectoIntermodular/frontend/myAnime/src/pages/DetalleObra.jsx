@@ -10,6 +10,9 @@ import getTituloPorIdioma from "../utils/getTituloPorIdioma";
 import { FaHeart, FaCheck } from "react-icons/fa";
 import { MDBIcon } from "mdb-react-ui-kit";
 import { useFavorites } from "../components/FavoritesContext";
+import StarIcon from "@mui/icons-material/Star";
+import StarHalfIcon from "@mui/icons-material/StarHalf";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 
 const formatearTiempo = (fecha) => {
   if (!fecha || fecha === "Ahora") return "hace un momento";
@@ -54,9 +57,11 @@ function DetalleObra() {
   const isPointerDownInsideEditor = useRef(false);
   const { triggerRefresh } = useFavorites();
 
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(null);
+
   const [esFavorito, setEsFavorito] = useState(false);
   const [lista, setLista] = useState(null);
-
 
   const usuarioLogueado = !!localStorage.getItem("idUsuario");
 
@@ -236,8 +241,6 @@ function DetalleObra() {
         setEsFavorito(true);
         triggerRefresh();
       }
-
-
     } catch (err) {
       console.error(err);
     }
@@ -284,6 +287,31 @@ function DetalleObra() {
       })
       .catch(console.error);
   }, [obra]);
+
+  useEffect(() => {
+    // Cambiamos obra.id por obra.idobra
+    if (!idUsuario || !obra?.idobra) return;
+
+    fetch(`${apiUrl}/puntua/${idUsuario}`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Asegúrate de que 'data' sea un array.
+        // Algunos backends devuelven { datos: [...] }, si es así usa data.datos.find
+        const listaPuntuaciones = Array.isArray(data) ? data : data.datos || [];
+
+        const valoracionUsuario = listaPuntuaciones.find(
+          (v) => Number(v.idobra) === Number(obra.idobra),
+        );
+
+        if (valoracionUsuario) {
+          // Ojo: verifica si tu DB devuelve 'valoracion' o 'puntuacion'
+          setRating(
+            valoracionUsuario.puntuacion || valoracionUsuario.valoracion || 0,
+          );
+        }
+      })
+      .catch((err) => console.error("Error cargando valoración:", err));
+  }, [idUsuario, obra?.idobra]); // Dependencia corregida
 
   const enviarComentario = () => {
     if (!nuevoComentario.trim() || !obra) return;
@@ -467,6 +495,37 @@ function DetalleObra() {
 
   const tituloTraducido = obra ? getTituloPorIdioma(obra) : "";
 
+  const enviarValoracion = async (valor) => {
+    const userId = localStorage.getItem("idUsuario");
+    const obraId = obra?.idobra;
+
+    // 🛡️ BLOQUEO DE SEGURIDAD: Si no hay usuario, no permitimos votar
+    if (!userId) {
+      alert("Debes iniciar sesión para poder valorar esta obra.");
+      // Opcional: Redirigir al login
+      // navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/puntua`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idusuario: Number(userId),
+          idobra: Number(obraId),
+          valoracion: valor,
+        }),
+      });
+
+      if (response.ok) {
+        setRating(valor);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   return (
     <div className="detalle-container">
       {/* Header y Sinopsis (Omitidos por brevedad, se mantienen igual) */}
@@ -492,9 +551,84 @@ function DetalleObra() {
               <strong>Autor:</strong> {obra.autor || "Desconocido"}
             </p>
           )}
-          <p className="detalle-sinopsis" lang="en">{obra.sinopsis}</p>
+          <p className="detalle-sinopsis" lang="en">
+            {obra.sinopsis}
+          </p>
         </div>
       </div>
+
+      <div style={{ margin: "20px 0", textAlign: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            opacity: usuarioLogueado ? 1 : 0.5, // 👈 Tono apagado si no está logueado
+            filter: usuarioLogueado ? "none" : "grayscale(0.5)", // 👈 Opcional: un toque más grisáceo
+          }}
+        >
+          {[1, 2, 3, 4, 5].map((starValue) => {
+            const currentRating = Number(rating) || 0;
+
+            return (
+              <div
+                key={starValue}
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                  cursor: usuarioLogueado ? "pointer" : "default", // 👈 Cursor normal si no puede clicar
+                  color: "#FFD700",
+                }}
+              >
+                {/* Capas de clic: Solo funcionan si estaLogueado es true */}
+                <div
+                  onClick={() =>
+                    usuarioLogueado && enviarValoracion(starValue - 0.5)
+                  }
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    width: "50%",
+                    height: "100%",
+                    zIndex: 2,
+                  }}
+                />
+                <div
+                  onClick={() => usuarioLogueado && enviarValoracion(starValue)}
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    width: "50%",
+                    height: "100%",
+                    zIndex: 2,
+                  }}
+                />
+
+                {/* Iconos */}
+                <div style={{ pointerEvents: "none" }}>
+                  {currentRating >= starValue ? (
+                    <StarIcon fontSize="large" />
+                  ) : currentRating >= starValue - 0.5 ? (
+                    <StarHalfIcon fontSize="large" />
+                  ) : (
+                    <StarBorderIcon fontSize="large" />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          <span
+            style={{
+              marginLeft: "10px",
+              fontSize: "1.2rem",
+              fontWeight: "bold",
+            }}
+          >
+            {rating && !isNaN(rating) ? Number(rating).toFixed(1) : "0.0"}
+          </span>
+        </div>
+        </div>
 
       <div>
         <button

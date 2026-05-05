@@ -6,9 +6,76 @@ import Footer from "../components/Footer";
 import { apiUrl } from "../config.js";
 import GoogleTranslate from "../components/GoogleTranslate";
 
+const translations = {
+  es: {
+    popAnimes: "Animes Populares",
+    recAnimes: "Animes Recientes",
+    topAnimes: "Animes con Mayor Puntuación",
+    nextAnimes: "Animes Próximamente",
+    popMangas: "Mangas Populares",
+    recMangas: "Mangas Recientes",
+    topMangas: "Mangas con Mayor Puntuación",
+    nextMangas: "Mangas Próximamente",
+  },
+  en: {
+    popAnimes: "Popular Animes",
+    recAnimes: "Recent Animes",
+    topAnimes: "Top Rated Animes",
+    nextAnimes: "Upcoming Animes",
+    popMangas: "Popular Mangas",
+    recMangas: "Recent Mangas",
+    topMangas: "Top Rated Mangas",
+    nextMangas: "Upcoming Mangas",
+  },
+  fr: {
+    popAnimes: "Animes Populaires",
+    recAnimes: "Animes Récents",
+    topAnimes: "Animes les Mieux Notés",
+    nextAnimes: "Animes à Venir",
+    popMangas: "Mangas Populaires",
+    recMangas: "Mangas Récents",
+    topMangas: "Mangas les Mieux Notés",
+    nextMangas: "Mangas à Venir",
+  },
+  de: {
+    popAnimes: "Beliebte Animes",
+    recAnimes: "Kürzliche Animes",
+    topAnimes: "Bestbewertete Animes",
+    nextAnimes: "Kommende Animes",
+    popMangas: "Beliebte Mangas",
+    recMangas: "Kürzliche Mangas",
+    topMangas: "Bestbewertete Mangas",
+    nextMangas: "Kommende Mangas",
+  },
+  pt: {
+    popAnimes: "Animes Populares",
+    recAnimes: "Animes Recentes",
+    topAnimes: "Animes Mais Bem Avaliados",
+    nextAnimes: "Próximos Animes",
+    popMangas: "Mangas Populares",
+    recMangas: "Mangas Recentes",
+    topMangas: "Mangas Mais Bem Avaliados",
+    nextMangas: "Próximos Mangas",
+  },
+  ja: {
+    popAnimes: "人気の高いアニメ",
+    recAnimes: "最近のアニメ",
+    topAnimes: "最高評価のアニメ",
+    nextAnimes: "近日公開のアニメ",
+    popMangas: "人気の高いマンガ",
+    recMangas: "最近のマンガ",
+    topMangas: "最高評価のマンガ",
+    nextMangas: "近日公開のマンガ",
+  },
+};
+
 function Home() {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    localStorage.getItem("language") || "es"
+  );
+  const t = translations[selectedLanguage] || translations.es;
 
   // --- Estados separados ---
   const [popularesAnimes, setPopularesAnimes] = useState([]);
@@ -20,9 +87,6 @@ function Home() {
   const [recientesMangas, setRecientesMangas] = useState([]);
   const [puntuacionMangas, setPuntuacionMangas] = useState([]);
   const [proximosMangas, setProximosMangas] = useState([]);
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    localStorage.getItem("language") || "es"
-  );
 
   const getTitulo = (obra) => {
     const traduccion = obra.traducciones?.find(
@@ -116,19 +180,19 @@ function Home() {
         {isHome ? (
           <>
             {/* --- ANIMES --- */}
-            <ListadoHorizontalObras obras={popularesAnimes.map(getTitulo)} titulo="Animes Populares" />
-            <ListadoHorizontalObras obras={recientesAnimes.map(getTitulo)} titulo="Animes Recientes" />
-            <ListadoHorizontalObras obras={puntuacionAnimes.map(getTitulo)} titulo="Animes con Mayor Puntuación" />
-            <ListadoHorizontalObras obras={proximosAnimes.map(getTitulo)} titulo="Animes Próximamente" />
+            <ListadoHorizontalObras obras={popularesAnimes.map(getTitulo)} titulo={t.popAnimes} />
+            <ListadoHorizontalObras obras={recientesAnimes.map(getTitulo)} titulo={t.recAnimes} />
+            <ListadoHorizontalObras obras={puntuacionAnimes.map(getTitulo)} titulo={t.topAnimes} />
+            <ListadoHorizontalObras obras={proximosAnimes.map(getTitulo)} titulo={t.nextAnimes} />
 
             {/* --- MANGAS --- */}
-            <ListadoHorizontalObras obras={popularesMangas.map(getTitulo)} titulo="Mangas Populares" />
-            <ListadoHorizontalObras obras={recientesMangas.map(getTitulo)} titulo="Mangas Recientes" />
-            <ListadoHorizontalObras obras={puntuacionMangas.map(getTitulo)} titulo="Mangas con Mayor Puntuación" />
-            <ListadoHorizontalObras obras={proximosMangas.map(getTitulo)} titulo="Mangas Próximamente" />
+            <ListadoHorizontalObras obras={popularesMangas.map(getTitulo)} titulo={t.popMangas} />
+            <ListadoHorizontalObras obras={recientesMangas.map(getTitulo)} titulo={t.recMangas} />
+            <ListadoHorizontalObras obras={puntuacionMangas.map(getTitulo)} titulo={t.topMangas} />
+            <ListadoHorizontalObras obras={proximosMangas.map(getTitulo)} titulo={t.nextMangas} />
           </>
         ) : (
-          <Outlet />
+          <Outlet context={{ selectedLanguage }} />
         )}
       </div>
       <Footer />

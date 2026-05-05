@@ -27,17 +27,39 @@ function CrearObra() {
     portada: "",
     estado: "proximamente",
     trailer: "",
-
   });
 
+  const [error, setError] = useState("");
+
   const handleChange = (e) => {
-    setForm({
+    setError(""); // Limpiar error al escribir
+    const { name, value } = e.target;
+    
+    let updatedForm = {
       ...form,
-      [e.target.name]: e.target.value,
-    });
+      [name]: value,
+    };
+
+    // Si cambia la fecha de lanzamiento, verificamos si es hoy o pasada para cambiar el estado
+    if (name === "fechalanzamiento" && value) {
+      const fechaSeleccionada = new Date(value);
+      fechaSeleccionada.setHours(0, 0, 0, 0);
+      
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      if (fechaSeleccionada <= hoy) {
+        updatedForm.estado = "en emision";
+      } else {
+        updatedForm.estado = "proximamente";
+      }
+    }
+
+    setForm(updatedForm);
   };
 
   const handleFileChange = (e) => {
+    setError(""); // Limpiar error al cambiar archivo
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -54,8 +76,25 @@ function CrearObra() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validación de campos obligatorios
+    if (!form.titulo.trim()) {
+      setError("El título de la obra es obligatorio.");
+      window.scrollTo(0, 0);
+      return;
+    }
+    if (!form.genero.trim()) {
+      setError("El género de la obra es obligatorio.");
+      window.scrollTo(0, 0);
+      return;
+    }
+    if (!form.fechalanzamiento) {
+      setError("La fecha de lanzamiento es obligatoria.");
+      window.scrollTo(0, 0);
+      return;
+    }
     if (!form.portada) {
-      alert("La portada es obligatoria");
+      setError("La imagen de portada es obligatoria.");
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -80,11 +119,13 @@ function CrearObra() {
         navigate("/admin");
       } else {
         const data = await res.json().catch(() => ({ mensaje: "Error desconocido" }));
-        alert("Error al crear la obra: " + (data.mensaje || "No se pudo crear la obra"));
+        setError(data.mensaje || "No se pudo crear la obra");
+        window.scrollTo(0, 0);
       }
     } catch (err) {
       console.error("Error al crear obra:", err);
-      alert("Error al conectar con el servidor");
+      setError("Error al conectar con el servidor");
+      window.scrollTo(0, 0);
     }
   };
 
@@ -100,6 +141,27 @@ function CrearObra() {
 
   return (
     <MDBContainer className="detalle-container my-5">
+      {error && (
+        <div
+          className="animate__animated animate__fadeInDown"
+          style={{
+            backgroundColor: "#fff5f5",
+            color: "#e53e3e",
+            border: "1px solid #feb2b2",
+            padding: "12px 20px",
+            borderRadius: "50px",
+            marginBottom: "20px",
+            fontSize: "0.95rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+          }}
+        >
+          <MDBIcon fas icon="exclamation-circle" />
+          <span>{error}</span>
+        </div>
+      )}
       <div className="detalle-header">
         {/* Sección de Portada */}
         <div

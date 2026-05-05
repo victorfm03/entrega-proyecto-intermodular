@@ -17,9 +17,12 @@ body, html {
   position: relative;
   display: flex;
   background-color: #e5e5e5;
-  width: 220px;
+  min-width: 220px;
+  width: fit-content;
   border-radius: 8px;
   overflow: hidden;
+  isolation: isolate;
+  padding: 1px;
 }
 
 .nav-tab{
@@ -114,16 +117,6 @@ body, html {
 .nav-slider.active-manga {
   transform: translateX(100%);
   clip-path: polygon(13px 0, 100% 0, 100% 100%, 13px 100%, 0 50%);
-}
-.nav-tabs-container {
-  position: relative;
-  display: flex;
-  background-color: #e5e5e5;
-  width: 220px;
-  border-radius: 8px;
-  overflow: hidden;          /* 🔥 CLAVE */
-  isolation: isolate;
-  padding: 1px;        /* 🔥 evita bugs de renderizado */
 }
 
 .nav-tab{
@@ -291,4 +284,35 @@ button{
 
 .navbar-dark-custom {
   background-color: #1414b8 !important;
+}
+
+/* Estilo base para el botón de volver */
+.btn-volver-link {
+  color: white !important;
+  opacity: 0.7;
+  text-decoration: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  transition: all 0.3s ease !important;
+  text-transform: none !important;
+  
+  /* Aumento de tamaño */
+  font-size: 19px !important; 
+  font-weight: 500; /* Un poco más de peso para que se lea mejor */
+}
+
+/* Comportamiento al pasar el mouse (Hover) */
+.btn-volver-link:hover {
+  color: #007bff !important; 
+  opacity: 1 !important;
+  background-color: transparent !important; 
+  box-shadow: none !important;
+  transform: translateY(-1px); /* Un pequeño efecto de elevación opcional */
+}
+
+/* Evitar el recuadro gris de enfoque (focus) */
+.btn-volver-link:focus {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
 }

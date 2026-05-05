@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import getTituloPorIdioma from "../utils/getTituloPorIdioma";
 import "../perfil.css";
 
 import {
@@ -22,7 +24,60 @@ import InsertLinkIcon from "@mui/icons-material/InsertLink";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { apiUrl } from "../config.js";
 
+const translations = {
+  es: {
+    animeList: "Lista de Anime",
+    mangaList: "Lista de Manga",
+    quizRecord: "Quiz Récord",
+    points: "puntos",
+    noAnime: "No tienes animes favoritos aún",
+    noManga: "No tienes mangas favoritos aún",
+  },
+  en: {
+    animeList: "Anime List",
+    mangaList: "Manga List",
+    quizRecord: "Quiz Record",
+    points: "points",
+    noAnime: "You don't have favorite animes yet",
+    noManga: "You don't have favorite mangas yet",
+  },
+  fr: {
+    animeList: "Liste d'Anime",
+    mangaList: "Liste de Manga",
+    quizRecord: "Record du Quiz",
+    points: "points",
+    noAnime: "Vous n'avez pas encore d'animes favoris",
+    noManga: "Vous n'avez pas encore de mangas favoris",
+  },
+  de: {
+    animeList: "Anime-Liste",
+    mangaList: "Manga-Liste",
+    quizRecord: "Quiz-Rekord",
+    points: "Punkte",
+    noAnime: "Du hast noch keine Lieblingsanimes",
+    noManga: "Du hast noch keine Lieblingsmangas",
+  },
+  pt: {
+    animeList: "Lista de Anime",
+    mangaList: "Lista de Manga",
+    quizRecord: "Recorde do Quiz",
+    points: "pontos",
+    noAnime: "Você ainda no tem animes favoritos",
+    noManga: "Você ainda não tem mangas favoritos",
+  },
+  ja: {
+    animeList: "アニメリスト",
+    mangaList: "マンガリスト",
+    quizRecord: "クイズ記録",
+    points: "ポイント",
+    noAnime: "お気に入りのアニメはまだありません",
+    noManga: "お気に入りのマンガはまだありません",
+  },
+};
+
 function Perfil() {
+  const { selectedLanguage } = useOutletContext();
+  const t = translations[selectedLanguage] || translations.es;
   const [user, setUser] = useState(null);
   const [basicActive, setBasicActive] = useState("anime");
   const idUsuario = localStorage.getItem("idUsuario");
@@ -30,9 +85,11 @@ function Perfil() {
 
   const [imgUrl, setImgUrl] = useState(null);
 
+  const [lista, setLista] = useState([]); // <--- AÑADE ESTA LÍNEA
+
   useEffect(() => {
-  setImgUrl(idUsuario ? `${apiUrl}/usuario/perfil/${idUsuario}` : null);
-}, [idUsuario, apiUrl]);
+    setImgUrl(idUsuario ? `${apiUrl}/usuario/perfil/${idUsuario}` : null);
+  }, [idUsuario, apiUrl]);
 
   useEffect(() => {
     const comprobarImagen = async () => {
@@ -49,16 +106,13 @@ function Perfil() {
         if (!data.ok) {
           setImgUrl(null);
         }
-      } catch (error) {
-        
-      }
+      } catch (error) {}
     };
 
     if (imgUrl) {
       comprobarImagen();
     }
   }, [imgUrl]);
-
 
   const handleBasicClick = (value) => {
     if (value === basicActive) return;
@@ -83,7 +137,7 @@ function Perfil() {
     };
 
     cargarFavoritos();
-  }, [apiUrl]);
+  }, [apiUrl, selectedLanguage]); // Añadido selectedLanguage para que se actualice al cambiar de idioma
 
   useEffect(() => {
     const cargarLista = async () => {
@@ -96,9 +150,8 @@ function Perfil() {
 
         if (data && data.ok && data.datos) {
           // El backend ahora devuelve el objeto directamente gracias al cambio anterior
-          setLista(data.datos); 
+          setLista(data.datos);
         }
-
       } catch (err) {
         console.error("Error cargando lista:", err);
       }
@@ -228,7 +281,6 @@ function Perfil() {
                 <p>
                   <EmailIcon /> {user.email}
                 </p>
-
               </div>
             </MDBCol>
           </MDBRow>
@@ -244,7 +296,7 @@ function Perfil() {
                 onClick={() => handleBasicClick("anime")}
                 active={basicActive === "anime"}
               >
-                Lista de Anime
+                {t.animeList}
               </MDBTabsLink>
             </MDBTabsItem>
 
@@ -253,13 +305,16 @@ function Perfil() {
                 onClick={() => handleBasicClick("manga")}
                 active={basicActive === "manga"}
               >
-                Lista de Manga
+                {t.mangaList}
               </MDBTabsLink>
             </MDBTabsItem>
 
             <MDBTabsItem>
-              <MDBTabsLink>
-                Quiz Récord
+              <MDBTabsLink
+                onClick={() => handleBasicClick("quiz")} // <--- Añade esto
+                active={basicActive === "quiz"} // <--- Añade esto
+              >
+                {t.quizRecord}
               </MDBTabsLink>
             </MDBTabsItem>
           </MDBTabs>
@@ -267,20 +322,34 @@ function Perfil() {
           <MDBTabsContent>
             <MDBTabsPane open={basicActive === "anime"}>
               <div className="lista-favoritos">
-                {favoritos.filter(f => f.tipo === "anime").length === 0 ? (
-                  <p>No tienes animes favoritos aún</p>
+                {favoritos.filter((f) => f.tipo === "anime").length === 0 ? (
+                  <p>{t.noAnime}</p>
                 ) : (
                   favoritos
-                    .filter(f => f.tipo === "anime")
+                    .filter((f) => f.tipo === "anime")
                     .map((obra) => (
-                      <div key={obra.idobra} className="favorito-card" style={{ display: "flex", alignItems: "center", marginBottom: "15px", gap: "15px" }}>
+                      <div
+                        key={obra.idobra}
+                        className="favorito-card"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginBottom: "15px",
+                          gap: "15px",
+                        }}
+                      >
                         <img
                           src={`${apiUrl}/obra/${obra.idobra}/imagen`}
-                          alt={obra.titulo}
-                          style={{ width: "80px", height: "110px", borderRadius: "8px", objectFit: "cover" }}
+                          alt={getTituloPorIdioma(obra)}
+                          style={{
+                            width: "80px",
+                            height: "110px",
+                            borderRadius: "8px",
+                            objectFit: "cover",
+                          }}
                         />
                         <div>
-                          <h5 style={{ margin: 0 }}>{obra.titulo}</h5>
+                          <h5 style={{ margin: 0 }}>{getTituloPorIdioma(obra)}</h5>
                         </div>
                       </div>
                     ))
@@ -290,20 +359,34 @@ function Perfil() {
 
             <MDBTabsPane open={basicActive === "manga"}>
               <div className="lista-favoritos">
-                {favoritos.filter(f => f.tipo === "manga").length === 0 ? (
-                  <p>No tienes mangas favoritos aún</p>
+                {favoritos.filter((f) => f.tipo === "manga").length === 0 ? (
+                  <p>{t.noManga}</p>
                 ) : (
                   favoritos
-                    .filter(f => f.tipo === "manga")
+                    .filter((f) => f.tipo === "manga")
                     .map((obra) => (
-                      <div key={obra.idobra} className="favorito-card" style={{ display: "flex", alignItems: "center", marginBottom: "15px", gap: "15px" }}>
+                      <div
+                        key={obra.idobra}
+                        className="favorito-card"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginBottom: "15px",
+                          gap: "15px",
+                        }}
+                      >
                         <img
                           src={`${apiUrl}/obra/${obra.idobra}/imagen`}
-                          alt={obra.titulo}
-                          style={{ width: "80px", height: "110px", borderRadius: "8px", objectFit: "cover" }}
+                          alt={getTituloPorIdioma(obra)}
+                          style={{
+                            width: "80px",
+                            height: "110px",
+                            borderRadius: "8px",
+                            objectFit: "cover",
+                          }}
                         />
                         <div>
-                          <h5 style={{ margin: 0 }}>{obra.titulo}</h5>
+                          <h5 style={{ margin: 0 }}>{getTituloPorIdioma(obra)}</h5>
                         </div>
                       </div>
                     ))
@@ -311,9 +394,18 @@ function Perfil() {
               </div>
             </MDBTabsPane>
 
-            <MDBTabsPane open={basicActive === "quiz"}>
-              <h4>Mejor puntuación: {user.puntuacionquiz}</h4>
-            </MDBTabsPane>
+            <MDBTabsContent>
+              {/* ... (tus otros panes de anime y manga) ... */}
+
+              <MDBTabsPane open={basicActive === "quiz"}>
+                <div className="p-3">
+                  <h4>
+                    <MDBIcon fas icon="trophy" className="me-2 text-warning" />
+                    {t.quizRecord}: <span translate="no">{user.puntuacionquiz || 0}</span> {t.points}
+                  </h4>
+                </div>
+              </MDBTabsPane>
+            </MDBTabsContent>
           </MDBTabsContent>
         </MDBCardBody>
       </MDBCard>

@@ -10,6 +10,7 @@ function GoogleTranslate({ language }) {
         {
           pageLanguage: "es",
           autoDisplay: false,
+          includedLanguages: "es,en,fr,de,pt,ja", // Idiomas permitidos
         },
         "google_translate_element"
       );
@@ -43,28 +44,51 @@ function GoogleTranslate({ language }) {
       .goog-te-gadget {
         display: none !important;
       }
+
+      .skiptranslate.goog-te-gadget {
+        display: none !important;
+      }
+
+      #google_translate_element {
+        display: none !important;
+      }
     `;
     document.head.appendChild(style);
   }, []);
 
   useEffect(() => {
-    if (!language || !window.google?.translate?.TranslateElement) return;
+    const updateLanguage = () => {
+      if (!window.google?.translate?.TranslateElement) {
+        setTimeout(updateLanguage, 500);
+        return;
+      }
 
-    const languageMap = {
-      es: "es",
-      en: "en",
-      fr: "fr",
-      de: "de",
-      ja: "ja",
+      const languageMap = {
+        es: "es",
+        en: "en",
+        fr: "fr",
+        de: "de",
+        pt: "pt",
+        ja: "ja",
+      };
+
+      const targetLang = languageMap[language] || "es";
+      const combo = document.querySelector(".goog-te-combo");
+
+      if (combo) {
+        // Si el idioma es español, Google Translate a veces no reacciona si ya está en el idioma base.
+        // Forzamos el cambio o aseguramos que el valor sea correcto.
+        if (combo.value !== targetLang) {
+          combo.value = targetLang;
+          combo.dispatchEvent(new Event("change"));
+        }
+      } else {
+        // Si no existe el combo todavía, reintentamos un poco más tarde
+        setTimeout(updateLanguage, 500);
+      }
     };
 
-    const targetLang = languageMap[language] || language;
-    const combo = document.querySelector(".goog-te-combo");
-
-    if (combo) {
-      combo.value = targetLang;
-      combo.dispatchEvent(new Event("change"));
-    }
+    updateLanguage();
   }, [language]);
 
   return (
