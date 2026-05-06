@@ -129,7 +129,16 @@ function Home() {
 
               if (orden === "popularidad") resultados[tipo].populares = obras.slice(0, 6);
               if (orden === "recientes") {
-                resultados[tipo].recientes = obras.slice(0, 6);
+                //resultados[tipo].recientes = obras.slice(0, 6);
+                resultados[tipo].recientes = obras
+                .filter(o=>{
+                  if(o.estado==="proximamente"){
+                    return false
+                  }else{
+                    return true
+                  }
+                })
+                .slice(0, 6);
                 // Filtrar Próximamente - obras con estado proximamente cuya fecha no ha pasado
                 const proximos = obras
                   .filter(o => {

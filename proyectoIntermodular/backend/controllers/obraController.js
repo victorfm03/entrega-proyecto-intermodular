@@ -214,6 +214,12 @@ class obraController{
   if(req.body.nombre){
     titulo=`&q=${req.body.nombre}`;
   }
+
+  var estado=null;
+  
+  if(req.body.estado){
+    estado=req.body.estado;
+  }
   
   if (req.body.pagina){
     totalPaginas= req.body.pagina
@@ -223,8 +229,8 @@ class obraController{
     for (let pagina = 1; pagina <= totalPaginas; pagina++) {
       await esperar(500);
       // 1️⃣ llamar a la API externa con paginación
-      console.log(`https://api.jikan.moe/v4/${tipo}?page=${pagina}&limit=25${titulo}`)
-      const response = await axios.get(`https://api.jikan.moe/v4/${tipo}?page=${pagina}&limit=25${titulo}`);
+      console.log(`https://api.jikan.moe/v4/${tipo}?page=${pagina}&limit=25${titulo}${estado?`&status=${estado}`:''}`)
+      const response = await axios.get(`https://api.jikan.moe/v4/${tipo}?page=${pagina}&limit=25${titulo}${estado?`&status=${estado}`:''}`);
       const obrasAPI = response.data.data;
 
       for (const obra of obrasAPI) {

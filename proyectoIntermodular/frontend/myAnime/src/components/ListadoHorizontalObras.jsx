@@ -12,6 +12,7 @@ function ListadoHorizontalObras({ obras, titulo, modo = "scroll" }) {
             key={obra.idobra}
             titulo={getTituloPorIdioma(obra)}
             id={obra.idobra}
+            obra={obra}
           />
         ))}
       </div>

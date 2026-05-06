@@ -417,6 +417,8 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                 </div>
               </div>
 
+              
+
               {/* MENÚ DESPLEGABLE DE PERFIL */}
               {profileMenuOpen && (
                 <div
@@ -457,7 +459,8 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                   >
                     <MDBIcon fas icon="user" className="me-2" /> {t.profile}
                   </Link>
-                  {localStorage.getItem("admin") ? (
+                  
+                  {localStorage.getItem("admin") === "true" ? (
                     <Link
                       to="/admin"
                       className="profile-menu-item"
@@ -598,7 +601,7 @@ function Navbar({ selectedLanguage, setSelectedLanguage }) {
                   <span translate="no">{t.anime}</span>
                 </NavLink>
 
-                <div className="nav-tab-divider" style={{ flexGrow: 1 }}></div>
+
 
                 <NavLink
                   to="/mangas"

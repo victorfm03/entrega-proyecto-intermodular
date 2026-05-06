@@ -52,37 +52,7 @@ body, html {
   clip-path: polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%);
 }
 
-.nav-tab-divider {
-  width: 16px;
-  flex-shrink: 0;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
 
-.nav-tab-divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 2px;
-  height: 70%;
-  background: #888;
-  transform: translate(-50%, -50%) rotate(45deg);
-  transform-origin: center;
-}
-
-.nav-tab-divider::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-}
 /* TEXTO BLANCO CUANDO ESTA ACTIVO */
 .nav-tab.active{
   color: white;

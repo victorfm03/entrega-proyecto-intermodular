@@ -2,7 +2,7 @@ import { MDBCard, MDBCardBody, MDBCardImage, MDBCardText } from "mdb-react-ui-ki
 import { apiUrl } from "../config.js";
 import { useNavigate } from "react-router-dom";
 
-function CardObra({ titulo, id }) {
+function CardObra({ titulo, id, obra }) { 
   const url = `${apiUrl}/obra/${id}/imagen`;
   const navigate = useNavigate();
 
@@ -14,6 +14,7 @@ function CardObra({ titulo, id }) {
     >
       <MDBCardImage src={url} alt={titulo} position="top" style={{ height: "250px", objectFit: "cover" }} />
       <MDBCardBody>
+        {obra.estado === "proximamente" && obra.fechalanzamiento ? obra.fechalanzamiento : null}
         <MDBCardText style={{ textAlign: "center" }}>{titulo}</MDBCardText>
       </MDBCardBody>
     </MDBCard>

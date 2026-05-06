@@ -52,6 +52,10 @@ function GoogleTranslate({ language }) {
       #google_translate_element {
         display: none !important;
       }
+      
+      div[class*="VIpgJd-ZVi9od-aZ2wEe"] {
+      display: none !important;
+}
     `;
     document.head.appendChild(style);
   }, []);
