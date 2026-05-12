@@ -25,6 +25,10 @@ app.use(express.urlencoded({ limit: '50MB', extended: true }));
 
 app.use(cors());
 
+app.get("/", (req, res) => {
+  res.send("<h1>Servidor del Proyecto Intermodular corriendo</h1><p>API disponible en <a href='/api/obra'>/api/obra</a></p>");
+});
+
 app.use("/api/usuario",usuarioRoutes);
 
 app.use("/api/obra",obraRoutes);

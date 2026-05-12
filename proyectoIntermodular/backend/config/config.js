@@ -1,10 +1,10 @@
 module.exports = {
-  port: 3000,
+  port: process.env.PORT || 3000,
   db: {
-    host:  "localhost",
-    user:  "proyectointermodular",
-    password:"proyectointermodular",
-    name:"proyectointermodular",
-    port:3306,
+    host:  process.env.DB_HOST || "localhost",
+    user:  process.env.DB_USER || "proyectointermodular",
+    password: process.env.DB_PASSWORD || "proyectointermodular",
+    name: process.env.DB_NAME || "proyectointermodular",
+    port: process.env.DB_PORT || 3306,
   }
 };

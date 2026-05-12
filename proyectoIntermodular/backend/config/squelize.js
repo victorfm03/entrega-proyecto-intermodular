@@ -24,11 +24,24 @@ const sequelize = new Sequelize(
 
 // Probar la conexión
 (async () => {
-  try {
-    await sequelize.authenticate();
-    
-  } catch (error) {
-    console.error("Error de conexión:", error);
+  let connected = false;
+  let attempts = 0;
+
+  while (!connected && attempts < 10) {
+    try {
+      await sequelize.authenticate();
+      console.log("✔ Conexión a la base de datos establecida");
+      connected = true;
+    } catch (error) {
+      attempts++;
+      console.log(`⏳ Intento ${attempts}/10 - esperando MySQL...`);
+
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  }
+
+  if (!connected) {
+    console.error("❌ No se pudo conectar a MySQL");
   }
 })();
 
