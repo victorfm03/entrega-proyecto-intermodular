@@ -286,3 +286,54 @@ button{
   box-shadow: none !important;
   outline: none !important;
 }
+
+
+.imagen-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.imagen-obra {
+    transition: all 0.3s ease;
+}
+
+.overlay-sinopsis {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+
+    text-align: left;
+    padding: 15px;
+
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    overflow: hidden;
+}
+
+/* Hover */
+.imagen-container:hover .imagen-obra {
+    filter: blur(4px);
+}
+
+.imagen-container:hover .overlay-sinopsis {
+    opacity: 1;
+}
+
+.overlay-sinopsis p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* número de líneas */
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
