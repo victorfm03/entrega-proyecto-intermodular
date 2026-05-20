@@ -45,6 +45,7 @@ services:
       PMA_HOST: db
       PMA_PORT: 3306
       MYSQL_ROOT_PASSWORD: proyectointermodular
+      UPLOAD_LIMIT: 256M
     depends_on:
       - db
 
